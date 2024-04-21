@@ -1,5 +1,5 @@
 import os
-from time import sleep
+
 import tempfile
 import uuid
 from typing import Any, Literal
@@ -176,3 +176,46 @@ def is_in_dialog_flow(rendered):
     csv_uploaded = not is_csv_missing(rendered)
     csv_prepared = st.session_state["csv_filepath"] is not None
     return csv_uploaded and csv_prepared
+
+
+def prepare_csv(rendered):
+    include_chat_element(
+        role="user",
+        content="Arquivo carregado.",
+        type="markdown",
+    )
+    with st.spinner("Processando..."):
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp_file:
+            tmp_file.write(rendered["file_upload"].getvalue())
+            st.session_state["csv_filepath"] = tmp_file.name
+
+        include_chat_element(
+            role="assistant",
+            content="Aqui estão as primeiras linhas do dataframe:",
+            type="markdown",
+        )
+
+        include_chat_element(
+            role="assistant",
+            content=pd.read_csv(st.session_state["csv_filepath"]).head(10),
+            type="dataframe",
+        )
+
+        include_chat_element(
+            role="assistant",
+            content="O que você gostaria de saber sobre esse dataframe?",
+            type="markdown",
+        )
+
+        st.rerun()
+
+
+def run_dialog_flow(generate_response):
+    prompt = st.chat_input("Digite aqui...")
+
+    if prompt:
+        include_chat_element(role="user", content=prompt, type="markdown")
+        with st.spinner("Processando..."):
+            include_chat_element(role="assistant", content=generate_response(prompt), type="markdown")
+
+        st.rerun()

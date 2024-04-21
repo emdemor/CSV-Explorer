@@ -1,5 +1,4 @@
 import os, sys
-import tempfile
 
 
 import pandas as pd
@@ -8,13 +7,24 @@ from streamlit import runtime
 from streamlit.web import cli as stcli
 
 import ui
-from ui.components import include_chat_element, initiate_session_state, is_csv_missing, is_in_dialog_flow, page_config, render_element, was_csv_just_uploaded
+from ui.components import (
+    initiate_session_state,
+    is_csv_missing,
+    is_in_dialog_flow,
+    page_config,
+    prepare_csv,
+    render_element,
+    run_dialog_flow,
+    was_csv_just_uploaded,
+)
 from bot import config
 
-import datetime
-from time import sleep
 
+def generate_response(prompt):
+    from time import sleep
 
+    sleep(1)
+    return "response"
 
 
 def front():
@@ -27,57 +37,15 @@ def front():
 
     rendered = render_element(st.session_state["messages"])
 
-    
-
     if is_csv_missing(rendered):
         st.chat_input("Forneça um arquivo CSV.", disabled=True)
         st.session_state["csv_filepath"] = None
 
-    
     if was_csv_just_uploaded(rendered):
-        include_chat_element(
-            role="user",
-            content="Arquivo carregado.",
-            type="markdown",
-        )
-        with st.spinner("Processando..."):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp_file:
-                tmp_file.write(rendered["file_upload"].getvalue())
-                st.session_state["csv_filepath"] = tmp_file.name
-
-            include_chat_element(
-                role="assistant",
-                content="Aqui estão as primeiras linhas do dataframe:",
-                type="markdown",
-            )
-
-            include_chat_element(
-                role="assistant",
-                content=pd.read_csv(st.session_state["csv_filepath"]).head(10),
-                type="dataframe",
-            )
-
-            include_chat_element(
-                role="assistant",
-                content="O que você gostaria de saber sobre esse dataframe?",
-                type="markdown",
-            )
-
-            st.rerun()
-
+        prepare_csv(rendered)
 
     if is_in_dialog_flow(rendered):
-        prompt = st.chat_input("Digite aqui...")
-
-        if prompt:
-            include_chat_element(role="user", content=prompt, type="markdown")
-
-            with st.spinner("Processando..."):
-                sleep(1)
-                response = "response"
-                include_chat_element(role="assistant", content=response, type="markdown")
-
-            st.rerun()
+        run_dialog_flow(generate_response)
 
 
 def run():
