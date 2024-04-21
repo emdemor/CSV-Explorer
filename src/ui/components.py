@@ -160,3 +160,19 @@ def page_config(layout: str = "centered", sidebar: str = "auto") -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def is_csv_missing(rendered):
+    return rendered["file_upload"] is None
+
+
+def was_csv_just_uploaded(rendered):
+    csv_uploaded = not is_csv_missing(rendered)
+    csv_path_empty = st.session_state["csv_filepath"] is None
+    return csv_uploaded and csv_path_empty
+
+
+def is_in_dialog_flow(rendered):
+    csv_uploaded = not is_csv_missing(rendered)
+    csv_prepared = st.session_state["csv_filepath"] is not None
+    return csv_uploaded and csv_prepared
