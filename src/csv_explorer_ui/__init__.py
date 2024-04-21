@@ -6,8 +6,8 @@ import streamlit as st
 from streamlit import runtime
 from streamlit.web import cli as stcli
 
-import ui
-from ui.components import (
+import csv_explorer_ui
+from csv_explorer_ui.components import (
     initiate_session_state,
     is_csv_missing,
     is_in_dialog_flow,
@@ -17,7 +17,7 @@ from ui.components import (
     run_dialog_flow,
     was_csv_just_uploaded,
 )
-from bot import config
+from csv_explorer import config
 
 
 def generate_response(prompt):
@@ -50,7 +50,7 @@ def front():
 
 def run():
     path = os.path.join(
-        os.sep.join(os.path.abspath(ui.__file__).split(os.sep)[:-1]),
+        os.sep.join(os.path.abspath(csv_explorer_ui.__file__).split(os.sep)[:-1]),
         "__init__.py",
     )
 

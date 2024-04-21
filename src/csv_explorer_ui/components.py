@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 import streamlit as st
 import pandas as pd
-from bot import config
+from csv_explorer import config
 
 
 @dataclass

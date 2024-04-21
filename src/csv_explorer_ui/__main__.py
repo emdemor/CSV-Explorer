@@ -2,7 +2,7 @@ import typer
 
 from dotenv import load_dotenv
 
-import ui
+import csv_explorer_ui
 
 
 app = typer.Typer()
@@ -13,7 +13,7 @@ app.add_typer(front_app, name="frontend")
 
 @front_app.command()
 def start():
-    ui.run()
+    csv_explorer_ui.run()
 
 
 if __name__ == "__main__":

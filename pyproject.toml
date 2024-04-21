@@ -4,8 +4,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bot"
-description = "a simple bot"
+name = "csv_explorer"
+description = "..."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE.txt"}
@@ -35,11 +35,11 @@ test = [
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
-"ui.assets" = ["*"]
-"bot.examples" = ["*"]
+"csv_explorer_ui.assets" = ["*"]
+"csv_explorer.examples" = ["*"]
 
 [project.scripts]
-bot = "bot.__main__:app"
+csv_explorer = "csv_explorer_ui.__main__:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -2,7 +2,7 @@
 
 export
 
-PROJECT_NAME := bot
+PROJECT_NAME := csv-explorer
 
 JUPYTER_IMAGE := $(PROJECT_NAME)_jupyter
 FRONT_IMAGE := $(PROJECT_NAME)_front

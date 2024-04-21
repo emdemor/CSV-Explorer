@@ -1,0 +1,28 @@
+FROM jupyter/minimal-notebook
+
+WORKDIR /project
+ENV PIP_DISABLE_PIP_VERSION_CHECK=on
+
+USER root
+
+# Instaling dependencies
+COPY ./requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Installing aplication
+COPY ./src /project/src
+COPY ./pyproject.toml /project/pyproject.toml
+COPY ./README.md /project/README.md 
+COPY ./LICENSE.txt /project/LICENSE.txt
+RUN pip install . --no-deps
+
+# Getting notebooks
+COPY ./notebooks /project/notebooks
+
+RUN chmod +777 -R /home/jovyan
+
+EXPOSE 8888
+
+VOLUME /project
+
+CMD ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.default_url='/lab/tree'", "--notebook-dir=/project/notebooks"]
