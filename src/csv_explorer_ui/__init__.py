@@ -1,7 +1,9 @@
 import os, sys
 
 
+import matplotlib
 import pandas as pd
+import matplotlib.pyplot as plt
 import streamlit as st
 from streamlit import runtime
 from streamlit.web import cli as stcli
@@ -17,11 +19,10 @@ from csv_explorer_ui.components import (
     page_config,
     prepare_csv,
     render_element,
-    run_dialog_flow,
     was_csv_just_uploaded,
 )
-from csv_explorer import config, CSVExplorer
-
+from csv_explorer import config
+from csv_explorer.csv_explorer import CSVExplorer
 
 
 def front():
@@ -32,13 +33,7 @@ def front():
 
     st.title(config.TITLE)
 
-    # from csv_explorer_ui.components import StreamlitChatElement
-    # img = StreamlitChatElement(role="user", type="image", content=config.LOGO_FILENAME)
-    # append_chat_element(StreamlitChatElement(role="user", type="image", content=config.LOGO_FILENAME))
-
     rendered = render_element(st.session_state["messages"])
-
-    generate_response = lambda x: x
 
     if is_csv_missing(rendered):
         st.chat_input("Forneça um arquivo CSV.", disabled=True)
@@ -49,9 +44,24 @@ def front():
         
 
     if is_in_dialog_flow(rendered):
+        explorer = CSVExplorer(filepath=st.session_state["csv_filepath"])
 
-        explorer = CSVExplorer(filepath=st.session_state["csv_filepath"], agent_type="openai-functions")
-        run_dialog_flow(explorer.invoke)
+        prompt = st.chat_input("Digite aqui...")
+
+        if prompt:
+            include_chat_element(role="user", content=prompt, type="markdown")
+
+            with st.spinner("Processando..."):
+                response = explorer.invoke(prompt)
+
+                if isinstance(response, matplotlib.figure.Figure):
+                    include_chat_element(role="assistant", content=response, type="pyplot")
+                else:
+                    include_chat_element(role="assistant", content=response, type="markdown")
+
+
+            st.rerun()
+
 
 
 def run():

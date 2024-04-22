@@ -6,25 +6,6 @@ from tabulate import tabulate
 import matplotlib.pyplot as plt
 from langchain_experimental.utilities import PythonREPL
 
-@tool
-def plot_generator(matplotlib_code: str, plot_path: str) -> str:
-    """
-    Use this tool whenever you need to generate any kind of plot.
-    Do not use `python_repl_ast` to generate a plot.
-    This function takes matplotlib plotting code and a specified file path from the user.
-    It generates the corresponding plot based on the provided code and saves this plot
-    locally as a PNG file at the specified path (plot_path).
-    """
-
-    if "savefig" not in matplotlib_code:
-        return f"[ERROR]. The matplotlib doesn't have the instruction 'savefig' to save the fig in the path '{plot_path}'. Tente novamente."
-
-    try:
-        python_repl = PythonREPL()
-        python_repl.run(matplotlib_code)
-        return plot_path
-    except Exception as err:
-        return f"[ERROR]. Not possible to run 'plot_generator'. Error: {err}"
 
 
 @tool

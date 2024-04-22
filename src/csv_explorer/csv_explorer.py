@@ -1,14 +1,19 @@
 import os
 import ast
+import uuid
 from importlib import import_module
 from typing import Any, Optional
 
+import matplotlib.pyplot as plt
 from langchain.memory.buffer_window import ConversationBufferWindowMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
-from csv_explorer.config import TEMP_FILEPATH, TOOLS_FILEPATH
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
+import csv_explorer
 
+TOOLS_FILEPATH = os.path.join("/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py")
+
+TEMP_FILEPATH = "/tmp"
 
 AGENTS = [
     "chat-conversational-react-description",
@@ -85,10 +90,13 @@ class CSVExplorer:
         """
         prompt = f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}"
         prompt = f"{prompt}. Se precisar, use os dados no csv {self.filepath}."
-        prompt = f"{prompt}. Se precisar salvar arquivos locamente, use o endereço {self.temp_filepath}."
-        prompt = f"{prompt}. IMPORTANTE. NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use `plot_generator`. Quando for pasar o código de matplotlib para a ferramenta, não esqueça de salvar a imagem localmente com o método `plt.savefig`"
+        #prompt = f"{prompt}. Quando necessário, use  plot_path como sendo algum arquivo dentro de {self.temp_filepath}."
+        #prompt = f"{prompt}. IMPORTANTE. NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use `plot_generator`. Quando for pasar o código de matplotlib para a ferramenta, não esqueça de passar a instrucao `plt.show`"
         answer = self.agent.invoke(prompt)
+        fig = plt.gcf()
         self._update_memory(answer)
+        if _has_content(fig):
+            return fig
         return self.memory.chat_memory.messages[-1].content
 
     @classmethod
@@ -162,19 +170,6 @@ class CSVExplorer:
         self.memory.save_context(
             {"input": answer["input"]}, {"output": answer["output"]}
         )
-        
-        # plots = [
-        #     output
-        #     for step, output in answer["intermediate_steps"]
-        #     if step.tool == "plot_generator"
-        # ]
-
-        # if len(plots) > 0:
-        #     self.memory.save_context({"input": answer["input"]}, {"output": plots[-1]})
-        # else:
-        #     self.memory.save_context(
-        #         {"input": answer["input"]}, {"output": answer["output"]}
-        #     )
 
 
     @classmethod
@@ -207,6 +202,14 @@ def _import_function(module_name: str, function_name: str) -> Optional[Any]:
     except AttributeError:
         print(f"Função {function_name} não encontrada no módulo {module_name}.")
 
+
+def _has_content(fig):
+    has_content = False
+    for ax in fig.axes:
+        if ax.lines or ax.patches or ax.texts or ax.images or ax.collections:
+            has_content = True
+            break
+    return has_content
 
 class AgentTypeNotRecognized(Exception):
     pass

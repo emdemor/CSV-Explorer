@@ -16,3 +16,4 @@ langchain-addons
 langchain_openai
 langchain_experimental
 tabulate
+seaborn
