@@ -8,17 +8,23 @@ from langchain_experimental.utilities import PythonREPL
 
 @tool
 def plot_generator(matplotlib_code: str, plot_path: str) -> str:
-    """This function takes matplotlib plotting code and a specified file path from the user. It generates the corresponding plot based on the provided code and saves this plot locally as a PNG file at the specified path (plot_path)."""
+    """
+    Use this tool whenever you need to generate any kind of plot.
+    Do not use `python_repl_ast` to generate a plot.
+    This function takes matplotlib plotting code and a specified file path from the user.
+    It generates the corresponding plot based on the provided code and saves this plot
+    locally as a PNG file at the specified path (plot_path).
+    """
 
     if "savefig" not in matplotlib_code:
-        return f"The matplotlib doesn't have the instruction 'savefig' to save the fig in the path '{plot_path}'. Tente novamente."
+        return f"[ERROR]. The matplotlib doesn't have the instruction 'savefig' to save the fig in the path '{plot_path}'. Tente novamente."
 
     try:
         python_repl = PythonREPL()
         python_repl.run(matplotlib_code)
         return plot_path
     except Exception as err:
-        raise f"Not possible to run 'plot_generator'. Error: {err}"
+        return f"[ERROR]. Not possible to run 'plot_generator'. Error: {err}"
 
 
 @tool
@@ -49,7 +55,7 @@ def infer_column_types_of_csv_file(filepath: str) -> str:
         
         return json.dumps(inferred_types, indent=2, ensure_ascii=False)
     except Exception as err:
-        return f"Not possible to run 'infer_column_types_of_csv_file'. Error: {err}"
+        return f"[ERROR]. Not possible to run 'infer_column_types_of_csv_file'. Error: {err}"
 
 @tool
 def get_column_names(filepath: str) -> str:
@@ -58,7 +64,7 @@ def get_column_names(filepath: str) -> str:
         df = pd.read_csv(filepath, nrows=2)
         return ", ".join(df.columns)
     except Exception as err:
-        return f"Not possible to run 'get_column_names'. Error: {err}"
+        return f"[ERROR]. Not possible to run 'get_column_names'. Error: {err}"
 
 @tool
 def generate_descriptive_statistics(filepath: str) -> str:
@@ -73,4 +79,4 @@ def generate_descriptive_statistics(filepath: str) -> str:
         df = pd.read_csv(filepath)
         return tabulate(df.describe(include="all"), headers="keys")
     except Exception as err:
-        return f"Not possible to run 'generate_descriptive_statistics'. Error: {err}"
+        return f"[ERROR]. Not possible to run 'generate_descriptive_statistics'. Error: {err}"

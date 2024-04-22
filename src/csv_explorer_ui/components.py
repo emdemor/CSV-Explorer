@@ -216,6 +216,24 @@ def run_dialog_flow(generate_response):
     if prompt:
         include_chat_element(role="user", content=prompt, type="markdown")
         with st.spinner("Processando..."):
-            include_chat_element(role="assistant", content=generate_response(prompt), type="markdown")
+
+            count = 0
+
+            response = "[ERROR] Não foi possível proceder essa demanda."
+            while (("[ERROR]" in response) and (count <= 3)):
+                try:
+                    response = generate_response(prompt)
+                    count += 1
+                except:
+                    count += 0.5
+
+            include_chat_element(role="assistant", content=response, type="markdown")
+
+            # print(f"> > > {response}")
+
+            # if response[-4:] in [".png", ".jpg", ".jpeg"]:
+            #     include_chat_element(role="assistant", content=response, type="image")
+            # else:
+            #     include_chat_element(role="assistant", content=response, type="markdown")
 
         st.rerun()

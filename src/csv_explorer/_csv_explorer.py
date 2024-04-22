@@ -86,6 +86,7 @@ class CSVExplorer:
         prompt = f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}"
         prompt = f"{prompt}. Se precisar, use os dados no csv {self.filepath}."
         prompt = f"{prompt}. Se precisar salvar arquivos locamente, use o endereço {self.temp_filepath}."
+        prompt = f"{prompt}. IMPORTANTE. NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use `plot_generator`. Quando for pasar o código de matplotlib para a ferramenta, não esqueça de salvar a imagem localmente com o método `plt.savefig`"
         answer = self.agent.invoke(prompt)
         self._update_memory(answer)
         return self.memory.chat_memory.messages[-1].content
@@ -158,18 +159,22 @@ class CSVExplorer:
         return memory
 
     def _update_memory(self, answer):
-        plots = [
-            output
-            for step, output in answer["intermediate_steps"]
-            if step.tool == "plot_generator"
-        ]
+        self.memory.save_context(
+            {"input": answer["input"]}, {"output": answer["output"]}
+        )
+        
+        # plots = [
+        #     output
+        #     for step, output in answer["intermediate_steps"]
+        #     if step.tool == "plot_generator"
+        # ]
 
-        if len(plots) > 0:
-            self.memory.save_context({"input": answer["input"]}, {"output": plots[-1]})
-        else:
-            self.memory.save_context(
-                {"input": answer["input"]}, {"output": answer["output"]}
-            )
+        # if len(plots) > 0:
+        #     self.memory.save_context({"input": answer["input"]}, {"output": plots[-1]})
+        # else:
+        #     self.memory.save_context(
+        #         {"input": answer["input"]}, {"output": answer["output"]}
+        #     )
 
 
     @classmethod

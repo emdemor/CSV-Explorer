@@ -8,6 +8,9 @@ from streamlit.web import cli as stcli
 
 import csv_explorer_ui
 from csv_explorer_ui.components import (
+    StreamlitChatElement,
+    append_chat_element,
+    include_chat_element,
     initiate_session_state,
     is_csv_missing,
     is_in_dialog_flow,
@@ -17,14 +20,8 @@ from csv_explorer_ui.components import (
     run_dialog_flow,
     was_csv_just_uploaded,
 )
-from csv_explorer import config
+from csv_explorer import config, CSVExplorer
 
-
-def generate_response(prompt):
-    from time import sleep
-
-    sleep(1)
-    return "response"
 
 
 def front():
@@ -35,7 +32,13 @@ def front():
 
     st.title(config.TITLE)
 
+    # from csv_explorer_ui.components import StreamlitChatElement
+    # img = StreamlitChatElement(role="user", type="image", content=config.LOGO_FILENAME)
+    # append_chat_element(StreamlitChatElement(role="user", type="image", content=config.LOGO_FILENAME))
+
     rendered = render_element(st.session_state["messages"])
+
+    generate_response = lambda x: x
 
     if is_csv_missing(rendered):
         st.chat_input("Forneça um arquivo CSV.", disabled=True)
@@ -43,9 +46,12 @@ def front():
 
     if was_csv_just_uploaded(rendered):
         prepare_csv(rendered)
+        
 
     if is_in_dialog_flow(rendered):
-        run_dialog_flow(generate_response)
+
+        explorer = CSVExplorer(filepath=st.session_state["csv_filepath"], agent_type="openai-functions")
+        run_dialog_flow(explorer.invoke)
 
 
 def run():
