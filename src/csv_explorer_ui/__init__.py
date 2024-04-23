@@ -11,15 +11,11 @@ from streamlit_chat_handler import StreamlitChatHandler
 
 import csv_explorer_ui
 from csv_explorer_ui.components import (
-    StreamlitChatElement,
-    append_chat_element,
-    include_chat_element,
     initiate_session_state,
     is_csv_missing,
     is_in_dialog_flow,
     page_config,
     prepare_csv,
-    render_element,
     was_csv_just_uploaded,
 )
 from csv_explorer import config
@@ -59,6 +55,11 @@ def front():
                 if isinstance(response, matplotlib.figure.Figure):
                     st.session_state["chat_handler"].append(
                         role="assistant", content=response, type="pyplot", render=True
+                    )
+                
+                elif isinstance(response, str) and response[-4:] == ".png":
+                    st.session_state["chat_handler"].append(
+                        role="assistant", content=response, type="image", render=True
                     )
 
                 else:

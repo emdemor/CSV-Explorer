@@ -88,16 +88,26 @@ class CSVExplorer:
         Returns:
             str: The response from the AI agent.
         """
-        prompt = f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}"
-        prompt = f"{prompt}. Se precisar, use os dados no csv {self.filepath}."
-        #prompt = f"{prompt}. Quando necessário, use  plot_path como sendo algum arquivo dentro de {self.temp_filepath}."
-        #prompt = f"{prompt}. IMPORTANTE. NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use `plot_generator`. Quando for pasar o código de matplotlib para a ferramenta, não esqueça de passar a instrucao `plt.show`"
+
+        prompt = (
+            "# Histórico de conversa\n"
+            f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}\n\n"
+            "# Instruções\n"
+            f"- Leia os dados do csv '{self.filepath}'.\n"
+            "- NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use a tool `plot_generator`. "
+            "Quando for pasar o código de matplotlib para a ferramenta, não esqueça de passar a instrucao `plt.show()`"
+
+        )
         answer = self.agent.invoke(prompt)
-        fig = plt.gcf()
-        self._update_memory(answer)
-        if _has_content(fig):
-            return fig
-        return self.memory.chat_memory.messages[-1].content
+
+        response = self._update_memory(answer)
+
+        # fig = plt.gcf()
+        # if fig:
+        #     return fig
+
+        # response = self._update_memory(answer)
+        return response
 
     @classmethod
     def get_tools(cls) -> list[StructuredTool]:
@@ -167,9 +177,29 @@ class CSVExplorer:
         return memory
 
     def _update_memory(self, answer):
-        self.memory.save_context(
-            {"input": answer["input"]}, {"output": answer["output"]}
-        )
+
+        fig = plt.gcf()
+        if fig:
+
+            plots = [
+                (action, result)
+                for action, result in answer["intermediate_steps"]
+                if action.tool == 'plot_generator'
+            ]
+
+            if len(plots) > 0:
+                self.memory.save_context(
+                    {"input": answer["input"]}, {"output": str(plots[-1][0].tool_input['plot_description'])}
+                )
+
+            return fig
+
+        else:
+            self.memory.save_context(
+                {"input": answer["input"]}, {"output": answer["output"]}
+            )
+
+            return answer["output"]
 
 
     @classmethod
