@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from streamlit import runtime
 from streamlit.web import cli as stcli
+from streamlit_chat_handler import StreamlitChatHandler
 
 import csv_explorer_ui
 from csv_explorer_ui.components import (
@@ -33,35 +34,39 @@ def front():
 
     st.title(config.TITLE)
 
-    rendered = render_element(st.session_state["messages"])
+    st.session_state["chat_handler"].render()
 
-    if is_csv_missing(rendered):
+    if is_csv_missing():
         st.chat_input("Forneça um arquivo CSV.", disabled=True)
         st.session_state["csv_filepath"] = None
 
-    if was_csv_just_uploaded(rendered):
-        prepare_csv(rendered)
-        
+    if was_csv_just_uploaded():
+        prepare_csv()
 
-    if is_in_dialog_flow(rendered):
+    if is_in_dialog_flow():
         explorer = CSVExplorer(filepath=st.session_state["csv_filepath"])
 
         prompt = st.chat_input("Digite aqui...")
 
         if prompt:
-            include_chat_element(role="user", content=prompt, type="markdown")
+            st.session_state["chat_handler"].append(
+                role="user", content=prompt, type="markdown", render=True
+            )
 
             with st.spinner("Processando..."):
                 response = explorer.invoke(prompt)
 
                 if isinstance(response, matplotlib.figure.Figure):
-                    include_chat_element(role="assistant", content=response, type="pyplot")
-                else:
-                    include_chat_element(role="assistant", content=response, type="markdown")
+                    st.session_state["chat_handler"].append(
+                        role="assistant", content=response, type="pyplot", render=True
+                    )
 
+                else:
+                    st.session_state["chat_handler"].append(
+                        role="assistant", content=response, type="markdown", render=True
+                    )
 
             st.rerun()
-
 
 
 def run():

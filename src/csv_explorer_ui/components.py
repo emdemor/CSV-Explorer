@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 import streamlit as st
 import pandas as pd
+from streamlit_chat_handler import StreamlitChatHandler
 from csv_explorer import config
 
 
@@ -30,24 +31,27 @@ def initiate_session_state() -> None:
     if "messages" not in st.session_state:
         st.session_state["messages"] = OrderedDict({})
 
-        append_chat_element(
-            index="init",
-            chat_element=StreamlitChatElement(
-                role="assistant",
-                content="Olá, tudo bem? Para começarmos, faça upload de seu CSV.",
-                type="markdown",
-            ),
+    if "chat_handler" not in st.session_state:
+        st.session_state["chat_handler"] = StreamlitChatHandler(
+            st.session_state,
+            session_id=st.session_state["session_id"],
         )
 
-        append_chat_element(
-            index="file_upload",
-            chat_element=StreamlitChatElement(
-                role="assistant",
-                content="Upload CSV",
-                type="file_uploader",
-                kwargs={"type": "csv"},
-            ),
+        st.session_state["chat_handler"].append(
+            index="init",
+            role="assistant",
+            type="markdown",
+            content="Olá, tudo bem? Para começarmos, faça upload de seu CSV.",
         )
+
+        st.session_state["chat_handler"].append(
+            index="file_upload",
+            role="assistant",
+            type="file_uploader",
+            content="Upload CSV",
+            kwargs={"type": "csv"},
+        )
+
 
 
 def append_chat_element(chat_element: StreamlitChatElement, index: str | None = None):
@@ -162,23 +166,24 @@ def page_config(layout: str = "centered", sidebar: str = "auto") -> None:
     )
 
 
-def is_csv_missing(rendered):
-    return rendered["file_upload"] is None
+def is_csv_missing():
+    return st.session_state["chat_handler"].rendered_elements["file_upload"] is None
 
 
-def was_csv_just_uploaded(rendered):
-    csv_uploaded = not is_csv_missing(rendered)
+def was_csv_just_uploaded():
+    csv_uploaded = not is_csv_missing()
     csv_path_empty = st.session_state["csv_filepath"] is None
     return csv_uploaded and csv_path_empty
 
 
-def is_in_dialog_flow(rendered):
-    csv_uploaded = not is_csv_missing(rendered)
+def is_in_dialog_flow():
+    csv_uploaded = not is_csv_missing()
     csv_prepared = st.session_state["csv_filepath"] is not None
     return csv_uploaded and csv_prepared
 
 
-def prepare_csv(rendered):
+def prepare_csv():
+    rendered = st.session_state["chat_handler"].rendered_elements
     include_chat_element(
         role="user",
         content="Arquivo carregado.",
