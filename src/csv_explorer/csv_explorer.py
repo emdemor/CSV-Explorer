@@ -31,6 +31,7 @@ AGENTS = [
 
 LLM_MODELS = {
     "gpt-3.5-turbo": ChatOpenAI,
+    "gpt-4": ChatOpenAI,
 }
 
 
@@ -177,21 +178,19 @@ class CSVExplorer:
         return memory
 
     def _update_memory(self, answer):
+        plots = [
+            (action, result)
+            for action, result in answer["intermediate_steps"]
+            if action.tool == 'plot_generator'
+        ]
 
         fig = plt.gcf()
-        if fig:
-
-            plots = [
-                (action, result)
-                for action, result in answer["intermediate_steps"]
-                if action.tool == 'plot_generator'
-            ]
-
+        
+        if fig and (len(plots) > 0):
             if len(plots) > 0:
                 self.memory.save_context(
                     {"input": answer["input"]}, {"output": str(plots[-1][0].tool_input['plot_description'])}
                 )
-
             return fig
 
         else:

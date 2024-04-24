@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap'); 
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+
+
+html, body, [class*="css"] {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    color: #303030;
+}
+
+/* Cor do plano de fundo */
+[data-testid="stApp"] {
+    background-color: #e5e9ee
+}
+
+[data-testid="stHeader"] {
+    visibility: hidden;
+}
+
+[data-baseweb="textarea"] {
+    border-width: 0px;
+}
+
+[data-baseweb="base-input"] textarea {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+}
+
+.st-b2 {
+    padding-left: 10px;
+}
+
+#csv-explorer {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: #14149a;
+}
+
+[data-testid="chatAvatarIcon-assistant"] {
+    background-color: #ec6810;
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+[data-testid="stMarkdownContainer"] {
+    font-family: 'Rajdhani', sans-serif;
+    color: #303030;
+}
+
+[data-testid="stMarkdownContainer"] p {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    color: #303030;
+    padding: 4px;
+}
+
+section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"] {
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1.1rem;
+    min-height: 38.4px;
+    margin: 0px;
+    line-height: 1.6;
+    color: rgb(255, 255, 255);
+    background-color: #ec6810;
+    border: 0px solid rgba(49, 51, 63, 0.0);
+}
+
+section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"]:hover {
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+    background-color: #14149a;
+    border: 1px solid #14149a;
+}
+
+section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"]:visited,
+section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"]:focus,
+section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"]:active {
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+    background-color: #ec6810;
+    border: 0px solid rgba(49, 51, 63, 0.0);
+}
+
+
+
+div[data-testid="stFileUploaderDropzoneInstructions"] span {
+    font-size: 16px;
+    color: #5b5b5b;
+}
+
+/* div[data-testid="stBottom"] div{
+    background-color: #e5e9ee
+} */
+
+[data-testid="stChatInput"] {
+    border-top-left-radius: 1.3rem;
+    border-top-right-radius: 1.3rem;
+    border-bottom-right-radius: 1.3rem;
+    border-bottom-left-radius: 1.3rem;
+    background-color: #f0f2f6 !important;
+}
+
+
+div[data-testid="stBottom"] > [class^="st-emotion-cache"] {
+    background-color: #e5e9ee;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* [data-testid="stChatMessage"] {
+    flex-direction: row-reverse;
+    text-align: right;
+} */
+
+
+[data-testid="chatAvatarIcon-user"] {
+    background-color: #1b1b96;
+}
+

@@ -1,3 +1,4 @@
+from importlib import resources
 import os
 
 import tempfile
@@ -8,6 +9,7 @@ import streamlit as st
 import pandas as pd
 from streamlit_chat_handler import StreamlitChatHandler
 from csv_explorer import config
+from csv_explorer.config import STYLE_FILEPATH
 
 
 def initiate_session_state() -> None:
@@ -58,22 +60,13 @@ def page_config(layout: str = "centered", sidebar: str = "auto") -> None:
 
     st.set_page_config(
         page_title=config.TITLE,
-        page_icon=config.LOGO_FILENAME,
+        page_icon=config.LOGO_FILEPATH,
         layout=layout,
         initial_sidebar_state=sidebar,
     )
 
-    st.markdown(
-        """
-        <style>
-            .st-emotion-cache-janbn0 {
-                flex-direction: row-reverse;
-                text-align: right;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    with open(STYLE_FILEPATH) as css:
+        st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
 
 
 def is_csv_missing():

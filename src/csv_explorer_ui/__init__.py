@@ -40,7 +40,7 @@ def front():
         prepare_csv()
 
     if is_in_dialog_flow():
-        explorer = CSVExplorer(filepath=st.session_state["csv_filepath"])
+        explorer = CSVExplorer(filepath=st.session_state["csv_filepath"], model="gpt-4")
 
         prompt = st.chat_input("Digite aqui...")
 
