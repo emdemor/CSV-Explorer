@@ -12,7 +12,6 @@ from langchain_experimental.utilities import PythonREPL
 def plot_generator(matplotlib_code: str, csv_filepath: str, plot_description: str) -> str:
     """Receives a matplotlib code, a csv_filepath and a plot_description. It reads the data in CSV filepath and generates the plot"""
 
-
     imports = [
         "import matplotlib.pyplot as plt",
         "import seaborn as sns",
@@ -20,11 +19,14 @@ def plot_generator(matplotlib_code: str, csv_filepath: str, plot_description: st
         "import numpy as np",
     ]
     
-
     for _imp in imports:
         if _imp not in matplotlib_code:
             matplotlib_code = _imp + "\n" + matplotlib_code
     
+
+    if "import matplotlib.pyplot as plt" in matplotlib_code:
+        matplotlib_code += "\n" + "plt.rcParams['figure.facecolor'] = 'none'"
+        matplotlib_code += "\n" + "plt.rcParams['axes.facecolor'] = 'none'"
 
     if "plt.show()" not in matplotlib_code:
         return f"[ERROR] Not possible to run 'plot_generator'. Error: 'plt.show()' not found"

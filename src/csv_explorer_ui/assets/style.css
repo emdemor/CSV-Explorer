@@ -91,10 +91,6 @@ div[data-testid="stFileUploaderDropzoneInstructions"] span {
     color: #5b5b5b;
 }
 
-/* div[data-testid="stBottom"] div{
-    background-color: #e5e9ee
-} */
-
 [data-testid="stChatInput"] {
     border-top-left-radius: 1.3rem;
     border-top-right-radius: 1.3rem;
@@ -109,21 +105,15 @@ div[data-testid="stBottom"] > [class^="st-emotion-cache"] {
 }
 
 
+/* button[data-testid="stChatInputSubmitButton"] {
+    color: #ec6810;
+} */
 
 
-
-
-
-
-
-
-
-
-
-/* [data-testid="stChatMessage"] {
+.st-emotion-cache-1c7y2kd {
     flex-direction: row-reverse;
     text-align: right;
-} */
+}
 
 
 [data-testid="chatAvatarIcon-user"] {
