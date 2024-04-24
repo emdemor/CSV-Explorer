@@ -185,6 +185,7 @@ class CSVExplorer:
         ]
 
         fig = plt.gcf()
+        fig.set_facecolor('none')
         
         if fig and (len(plots) > 0):
             if len(plots) > 0:
