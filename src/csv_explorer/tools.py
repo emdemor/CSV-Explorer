@@ -6,7 +6,7 @@ from langchain.agents import tool
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 from langchain_experimental.utilities import PythonREPL
-from csv_explorer.config import PLT_STYLE
+from csv_explorer_ui.config import PLT_STYLE
 
 
 @tool
