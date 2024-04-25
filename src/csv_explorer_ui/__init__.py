@@ -2,6 +2,8 @@ import os, sys
 
 
 import matplotlib
+import openai
+import pydantic
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
@@ -16,10 +18,11 @@ from csv_explorer_ui.components import (
     is_in_dialog_flow,
     page_config,
     prepare_csv,
+    set_explorer,
+    sidebar,
     was_csv_just_uploaded,
 )
 from csv_explorer import config
-from csv_explorer.csv_explorer import CSVExplorer
 
 
 def front():
@@ -27,6 +30,8 @@ def front():
     page_config(layout="centered", sidebar="auto")
 
     initiate_session_state()
+
+    sidebar()
 
     st.title(config.TITLE)
 
@@ -40,34 +45,51 @@ def front():
         prepare_csv()
 
     if is_in_dialog_flow():
-        explorer = CSVExplorer(filepath=st.session_state["csv_filepath"], model="gpt-4")
 
+        set_explorer()
+        
         prompt = st.chat_input("Digite aqui...")
 
-        if prompt:
+        if (prompt and ("explorer" in st.session_state)):
+            
             st.session_state["chat_handler"].append(
                 role="user", content=prompt, type="markdown", render=True
             )
 
             with st.spinner("Processando..."):
-                response = explorer.invoke(prompt)
 
-                if isinstance(response, matplotlib.figure.Figure):
-                    st.session_state["chat_handler"].append(
-                        role="assistant", content=response, type="pyplot", render=True
-                    )
+                try:
+
+                    response, additional = st.session_state["explorer"].invoke(prompt)
+
+                    if isinstance(additional, matplotlib.figure.Figure):
+                        st.session_state["chat_handler"].append(
+                            role="assistant", content=response, type="markdown", render=True
+                        )
+                        st.session_state["chat_handler"].append(
+                            role="assistant", content=additional, type="pyplot", render=True
+                        )
+
+                    else:
+                        st.session_state["chat_handler"].append(
+                            role="assistant", content=response, type="markdown", render=True
+                        )
+                    
+                    st.rerun()
+
+                except KeyError:
+                    pass
+
+                except openai.AuthenticationError:
+                    st.error("Chave da API inválida.", icon="🚨")
                 
-                elif isinstance(response, str) and response[-4:] == ".png":
-                    st.session_state["chat_handler"].append(
-                        role="assistant", content=response, type="image", render=True
-                    )
+                except openai.InternalServerError as err:
+                    if "reducing the temperature" in str(err):
+                        st.error("A temperatura está muito alta. Tente reduzir.", icon="🚨")
+                    st.error("Houve um erro interno. Tente novamente.", icon="🚨")
 
-                else:
-                    st.session_state["chat_handler"].append(
-                        role="assistant", content=response, type="markdown", render=True
-                    )
 
-            st.rerun()
+            
 
 
 def run():

@@ -6,43 +6,56 @@ from langchain.agents import tool
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 from langchain_experimental.utilities import PythonREPL
+from csv_explorer.config import PLT_STYLE
 
 
 @tool
 def plot_generator(matplotlib_code: str, csv_filepath: str, plot_description: str) -> str:
-    """Receives a matplotlib code, a csv_filepath and a plot_description. It reads the data in CSV filepath and generates the plot"""
+    """
+    Use this tool whenever you need to generate a plot (like pizza, histogram, line-plot, scatter-plot, heatmap and similars)
+    It receives a matplotlib code, a csv_filepath and a plot_description, reads the data in CSV filepath and generates the plot.
+    """
+
+    prefix = ""
 
     imports = [
+        "import matplotlib",
         "import matplotlib.pyplot as plt",
         "import seaborn as sns",
         "import pandas as pd",
         "import numpy as np",
+        "from cycler import cycler"
     ]
     
     for _imp in imports:
         if _imp not in matplotlib_code:
-            matplotlib_code = _imp + "\n" + matplotlib_code
-    
+            prefix = _imp + "\n" + prefix
+        
 
-    if "import matplotlib.pyplot as plt" in matplotlib_code:
-        matplotlib_code += "\n" + "plt.rcParams['figure.facecolor'] = 'none'"
-        matplotlib_code += "\n" + "plt.rcParams['axes.facecolor'] = 'none'"
+    if "import matplotlib.pyplot as plt" in prefix:
+        prefix += "\n" + f"plt.style.use('{PLT_STYLE}')"
+        prefix += "\n" + "plt.rcParams['figure.facecolor'] = 'none'"
+        prefix += "\n" + "plt.rcParams['axes.facecolor'] = 'none'"
+        prefix += "\n" + "plt.rc('axes', prop_cycle=(cycler('color', ['#14149a', '#ec6810', '#4A8DC4', '#F24405', '#1C2641', '#F7A55A',  '#61408a', '#8C5483',  '#D99F6C', '#32088C',  '#e377c2', '#3314A6'])))"
 
-    if "plt.show()" not in matplotlib_code:
-        return f"[ERROR] Not possible to run 'plot_generator'. Error: 'plt.show()' not found"
+
+        
+    if "matplotlib.use('Agg')" not in prefix:
+        prefix = (
+            "import matplotlib\n" "matplotlib.use('Agg')\n" f"{prefix}"
+        )
 
     if f"pd.read_csv('{csv_filepath}')" not in matplotlib_code:
         matplotlib_code = (
-            "import pandas as pd\n"
             f"df = pd.read_csv('{csv_filepath}')\n\n"
             f"{matplotlib_code}"
         )
 
+    if "plt.show()" not in matplotlib_code:
+        matplotlib_code = matplotlib_code + "\n" + "plt.show()"
+    
 
-    if "matplotlib.use('Agg')" not in matplotlib_code:
-        matplotlib_code = (
-            "import matplotlib\n" "matplotlib.use('Agg')\n" f"{matplotlib_code}"
-        )
+    matplotlib_code = prefix + "\n" + matplotlib_code
 
     try:
         python_repl = PythonREPL()

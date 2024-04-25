@@ -15,6 +15,7 @@ html, body, [class*="css"] {
     background-color: #e5e9ee
 }
 
+/* Header do streamlit */
 [data-testid="stHeader"] {
     visibility: hidden;
 }
@@ -39,9 +40,14 @@ html, body, [class*="css"] {
 }
 
 [data-testid="chatAvatarIcon-assistant"] {
-    background-color: #ec6810;
+    background-image: linear-gradient(30deg, #ec6810 30%, #F09819  90%);
     flex-direction: row-reverse;
     text-align: right;
+}
+
+[data-testid="chatAvatarIcon-user"] {
+    /* background-color: #1b1b96; */
+    background-image: linear-gradient(30deg, #1b1b96 30%, #7c82be  90%);
 }
 
 [data-testid="stMarkdownContainer"] {
@@ -64,15 +70,16 @@ section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-sec
     margin: 0px;
     line-height: 1.6;
     color: rgb(255, 255, 255);
-    background-color: #ec6810;
+    /* background-color: #ec6810; */
+    background-image: linear-gradient(30deg, #ec6810 30%, #F09819  90%);
     border: 0px solid rgba(49, 51, 63, 0.0);
 }
 
 section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"]:hover {
-    font-weight: 600;
-    color: rgb(255, 255, 255);
-    background-color: #14149a;
-    border: 1px solid #14149a;
+    font-weight: 700;
+    color: #ffffff;
+    /* background-color: #14149a; */
+    /* border: 1px solid #14149a; */
 }
 
 section[data-testid="stFileUploaderDropzone"] button[data-testid="baseButton-secondary"]:visited,
@@ -116,7 +123,81 @@ div[data-testid="stBottom"] > [class^="st-emotion-cache"] {
 }
 
 
-[data-testid="chatAvatarIcon-user"] {
-    background-color: #1b1b96;
+
+/* SIDEBAR */
+
+
+/*logo na sidebar*/
+[data-testid=stSidebar] [data-testid=stImage]{
+    text-align: center;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
+
+section[data-testid="stSidebar"] {
+    background-image: linear-gradient(18deg, #1b1b96 40%, #24549b  100%);
+}
+
+div[data-baseweb="select"] > div {
+    border-radius: 25px;
+    padding-left: 10px
+}
+
+div[data-testid="textInputRootElement"] {
+    border-radius: 25px;
+    padding-left: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+}
+
+.st-ax .st-ae {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+}
+
+div[data-testid="stNotificationContentError"] > [class^="st-emotion-cache"] > span[data-testid="stAlertEmojiIcon"] {
+    top: 6px;
+}
+
+div[data-testid="stSidebarContent"] div[data-testid="stSelectbox"] > label[data-testid="stWidgetLabel"] > div[data-testid="stMarkdownContainer"] > p,
+div[data-testid="stSidebarContent"] div[data-testid="stTextInput"] > label[data-testid="stWidgetLabel"] > div[data-testid="stMarkdownContainer"] > p,
+div[data-testid="stSidebarContent"] div[data-testid="stSlider"] > label[data-testid="stWidgetLabel"] > div[data-testid="stMarkdownContainer"] > p,
+div[data-testid="stSidebarContent"] div[data-testid="stTickBar"] > div[data-testid="stTickBarMin"],
+div[data-testid="stSidebarContent"] div[data-testid="stTickBar"] > div[data-testid="stTickBarMax"],
+div[data-testid="stSidebarContent"] div[data-testid="stThumbValue"],
+div[data-testid="stSidebarContent"] button[data-testid="baseButton-header"] {
+    font-family: 'Rajdhani', sans-serif;
+    color: #ffffff
+}
+
+/* Header na sidebar */
+div[data-testid="stSidebarContent"] div[data-testid="stHeading"] h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: #ffffff
+}
+
+/* Selectbox na sidebar */
+div[data-testid="stSidebarContent"] div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    color: #1b1b96
+}
+
+div[data-testid="stSidebarContent"] svg[data-baseweb="icon"] {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    color: #ec6810
+}
+
+
+
+
+div[data-testid="stSidebarContent"] li {
+    font-family: 'Rajdhani', sans-serif;
+    color: #ec6810
+}
+
 

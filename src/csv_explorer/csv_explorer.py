@@ -68,6 +68,10 @@ class CSVExplorer:
         self.model = self._set_model(model)
         self.temperature = temperature
         self.memory_k = memory_k
+        self.reset()
+    
+
+    def reset(self):
         self.llm = self._set_llm()
         self.memory = self._set_memory()
         self.agent = create_csv_agent(
@@ -77,7 +81,10 @@ class CSVExplorer:
             agent_type=self.agent_type,
             extra_tools=self.tools,
             return_intermediate_steps=True,
+            handle_parsing_errors=True,
         )
+        return self
+
 
     def invoke(self, query):
         """
@@ -91,23 +98,18 @@ class CSVExplorer:
         """
 
         prompt = (
+            "# Siga TODAS as seguintes instruções\n"
+            f"- Leia os dados do csv '{self.filepath}'.\n"
+            f"- Formate os outputs para markdown.\n"
+            f"- Os outputs devem estar em português.\n"
+            f"- NÃO exiba figuras em código markdown com a sintaxe `![<alt>](<path>)`.\n"
+            "- NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use a tool `plot_generator`. "
+            "Quando for pasar o código de matplotlib para a ferramenta, não esqueça de passar a instrucao `plt.show()`\n\n"
             "# Histórico de conversa\n"
             f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}\n\n"
-            "# Instruções\n"
-            f"- Leia os dados do csv '{self.filepath}'.\n"
-            "- NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use a tool `plot_generator`. "
-            "Quando for pasar o código de matplotlib para a ferramenta, não esqueça de passar a instrucao `plt.show()`"
-
         )
         answer = self.agent.invoke(prompt)
-
         response = self._update_memory(answer)
-
-        # fig = plt.gcf()
-        # if fig:
-        #     return fig
-
-        # response = self._update_memory(answer)
         return response
 
     @classmethod
@@ -154,6 +156,13 @@ class CSVExplorer:
         """
         return list(LLM_MODELS.keys())
 
+
+    def set(self, **kwargs):
+        for k,v in kwargs.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+        return self.reset()
+
     def _set_model(self, model: str) -> Any:
         if model not in LLM_MODELS:
             raise LLMModelNotRecognized()
@@ -190,16 +199,16 @@ class CSVExplorer:
         if fig and (len(plots) > 0):
             if len(plots) > 0:
                 self.memory.save_context(
-                    {"input": answer["input"]}, {"output": str(plots[-1][0].tool_input['plot_description'])}
+                    {"input": answer["input"]}, {"output": f'```{answer["output"] + str(plots[-1][0].tool_input["plot_description"])}```'}
                 )
-            return fig
+            return (answer["output"], fig)
 
         else:
             self.memory.save_context(
-                {"input": answer["input"]}, {"output": answer["output"]}
+                {"input": answer["input"]}, {"output": f'```{answer["output"]}```'}
             )
 
-            return answer["output"]
+            return (answer["output"], None)
 
 
     @classmethod
