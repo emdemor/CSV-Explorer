@@ -8,7 +8,7 @@ from csv_explorer.csv_explorer import CSVExplorer
 
 
 def is_csv_missing():
-    return st.session_state["chat_handler"].rendered_elements["file_upload"] is None
+    return st.session_state["chat_handler"].rendered_elements.get("file_upload") is None
 
 
 def was_csv_just_uploaded():
