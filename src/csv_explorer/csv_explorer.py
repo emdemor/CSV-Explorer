@@ -1,17 +1,21 @@
 import os
 import ast
 import uuid
+import json
 from importlib import import_module
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
+from loguru import logger
 from langchain.memory.buffer_window import ConversationBufferWindowMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
 import csv_explorer
 
-TOOLS_FILEPATH = os.path.join("/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py")
+TOOLS_FILEPATH = os.path.join(
+    "/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py"
+)
 
 TEMP_FILEPATH = "/tmp"
 
@@ -69,7 +73,6 @@ class CSVExplorer:
         self.temperature = temperature
         self.memory_k = memory_k
         self.reset()
-    
 
     def reset(self):
         self.llm = self._set_llm()
@@ -83,8 +86,8 @@ class CSVExplorer:
             return_intermediate_steps=True,
             handle_parsing_errors=True,
         )
+        self._update_logs()
         return self
-
 
     def invoke(self, query, callbacks=None):
         """
@@ -104,13 +107,14 @@ class CSVExplorer:
             f"- Os outputs devem estar em português.\n"
             f"- NÃO exiba figuras em código markdown com a sintaxe `![<alt>](<path>)`.\n"
             "- NÃO use `python_repl_ast` para gerar plots. Se precisar gerar plots, use a tool `plot_generator`. "
-            "Quando for pasar o código de matplotlib para a ferramenta, não esqueça de passar a instrucao `plt.show()`\n\n"
+            "Quando for pasar o código do matplotlib para a tool, não esqueça de passar a instrucao `plt.show()`\n\n"
             "# Histórico de conversa\n"
             f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}\n\n"
         )
         configs = {"callbacks": callbacks} if callbacks else None
         answer = self.agent.invoke({"input": prompt}, {"callbacks": callbacks})
-        response = self._update_memory(answer)
+        response = self._update_memory(query, answer)
+        self._update_logs()
         return response
 
     @classmethod
@@ -157,9 +161,8 @@ class CSVExplorer:
         """
         return list(LLM_MODELS.keys())
 
-
     def set(self, **kwargs):
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             if hasattr(self, k):
                 setattr(self, k, v)
         return self.reset()
@@ -187,34 +190,40 @@ class CSVExplorer:
         memory.save_context({"input": "Olá!"}, {"output": "Olá!. Como posso ajudar?"})
         return memory
 
-    def _update_memory(self, answer):
-        plots = [
-            (action, result)
-            for action, result in answer["intermediate_steps"]
-            if action.tool == 'plot_generator'
-        ]
+    def _update_memory(self, query, answer):
 
-        fig = plt.gcf()
-        fig.set_facecolor('none')
-        
-        if fig and (len(plots) > 0):
-            if len(plots) > 0:
-                self.memory.save_context(
-                    {"input": answer["input"]}, {"output": f'```{answer["output"] + str(plots[-1][0].tool_input["plot_description"])}```'}
-                )
+        logger.info((3 * "\n") + f"query = {query}\n" + str(answer))
+
+        if _has_figure_in_answer(answer):
+            fig = plt.gcf()
+            fig.set_facecolor("none")
+
+            plots = [
+                (action, result)
+                for action, result in answer["intermediate_steps"]
+                if action.tool == "plot_generator"
+            ]
+            self.memory.save_context(
+                {"input": query},
+                {
+                    "output": f'{answer["output"] + ": " + str(plots[-1][0].tool_input["plot_description"])}'
+                },
+            )
             return (answer["output"], fig)
 
-        else:
-            self.memory.save_context(
-                {"input": answer["input"]}, {"output": f'```{answer["output"]}```'}
-            )
+        self.memory.save_context({"input": query}, {"output": f'{answer["output"]}'})
 
-            return (answer["output"], None)
-
+        return (answer["output"], None)
 
     @classmethod
     def _set_temp_folder(cls):
         _create_directory_if_not_exists(cls.temp_filepath)
+
+    def _update_logs(self):
+        logger.info("Updating logs")
+        extracted_messages = [x.__repr__() for x in self.memory.chat_memory.messages]
+        with open("logs.txt", "w") as file:
+            file.write(json.dumps(extracted_messages, indent=4, ensure_ascii=False))
 
 
 def _create_directory_if_not_exists(folderpath):
@@ -249,7 +258,30 @@ def _has_content(fig):
         if ax.lines or ax.patches or ax.texts or ax.images or ax.collections:
             has_content = True
             break
+    if not has_content:
+        logger.info("No content found in figure")
+    else:
+        logger.info("Content found in figure")
     return has_content
+
+
+def _has_figure_in_answer(answer):
+
+    if "intermediate_steps" not in answer:
+        logger.info("No intermediate steps found in answer")
+        return False
+    plots = [
+        (action, result)
+        for action, result in answer["intermediate_steps"]
+        if action.tool == "plot_generator"
+    ]
+
+    if len(plots) > 0:
+        logger.info("Plot found in answer")
+        return True
+    logger.info("No plot found in answer")
+    return False
+
 
 class AgentTypeNotRecognized(Exception):
     pass

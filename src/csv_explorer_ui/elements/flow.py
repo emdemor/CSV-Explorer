@@ -72,10 +72,13 @@ def set_explorer():
             )
 
     except pydantic.v1.error_wrappers.ValidationError:
-        st.session_state["chat_handler"].append(
-            role="user",
-            content="Por favor, forneça sua chave da API.",
-            type="error",
-            icon="🚨",
-        )
+
+        if "no-apt-key" in st.session_state["elements"]:
+            st.session_state["chat_handler"].append(
+                role="user",
+                content="Por favor, forneça sua chave da API.",
+                type="error",
+                icon="🚨",
+                index="no-apt-key",
+            )
 

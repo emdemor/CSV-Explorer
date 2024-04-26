@@ -49,6 +49,9 @@ def add_api_key():
                 content=f"Chave '{masked_key}' adicionada.",
                 type="success",
             )
+        
+        if "no-apt-key" in st.session_state["elements"]:
+            del st.session_state["elements"]["no-apt-key"]
 
 
 def sidebar():
