@@ -86,7 +86,7 @@ class CSVExplorer:
         return self
 
 
-    def invoke(self, query):
+    def invoke(self, query, callbacks=None):
         """
         Invokes the AI agent with a query and returns the response.
 
@@ -108,7 +108,8 @@ class CSVExplorer:
             "# Histórico de conversa\n"
             f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}\n\n"
         )
-        answer = self.agent.invoke(prompt)
+        configs = {"callbacks": callbacks} if callbacks else None
+        answer = self.agent.invoke({"input": prompt}, {"callbacks": callbacks})
         response = self._update_memory(answer)
         return response
 

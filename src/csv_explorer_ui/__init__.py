@@ -8,6 +8,7 @@ from csv_explorer_ui.elements.front import front
 
 
 def run():
+
     path = os.path.join(
         os.sep.join(os.path.abspath(csv_explorer_ui.__file__).split(os.sep)[:-1]),
         "__init__.py",

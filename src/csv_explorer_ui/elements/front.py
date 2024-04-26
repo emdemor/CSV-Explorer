@@ -2,6 +2,7 @@ import matplotlib
 import openai
 
 import streamlit as st
+from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 
 from csv_explorer_ui import config
 from csv_explorer_ui.elements.settings import initiate_session_state, page_config
@@ -13,6 +14,7 @@ from csv_explorer_ui.elements.flow import (
     set_explorer,
     was_csv_just_uploaded,
 )
+
 
 
 def front():
@@ -49,9 +51,12 @@ def front():
             with st.spinner("Processando..."):
 
                 try:
+                    st_callback = StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)
 
-                    response, additional = st.session_state["explorer"].invoke(prompt)
-
+                    response, additional = st.session_state["explorer"].invoke(prompt, [st_callback])
+                    print(st_callback)
+                    print(dir(st_callback))
+                    
                     if isinstance(additional, matplotlib.figure.Figure):
                         st.session_state["chat_handler"].append(
                             role="assistant",

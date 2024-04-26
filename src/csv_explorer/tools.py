@@ -24,7 +24,7 @@ def plot_generator(matplotlib_code: str, csv_filepath: str, plot_description: st
         "import seaborn as sns",
         "import pandas as pd",
         "import numpy as np",
-        "from cycler import cycler"
+        "from cycler import cycler",
     ]
     
     for _imp in imports:
