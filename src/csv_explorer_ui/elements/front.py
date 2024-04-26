@@ -16,7 +16,6 @@ from csv_explorer_ui.elements.flow import (
 )
 
 
-
 def front():
 
     page_config(layout="centered", sidebar="auto")
@@ -51,12 +50,17 @@ def front():
             with st.spinner("Processando..."):
 
                 try:
-                    st_callback = StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)
+                    st_callback = response, additional = st.session_state[
+                        "explorer"
+                    ].invoke(
+                        prompt,
+                        [
+                            StreamlitCallbackHandler(
+                                st.container(), expand_new_thoughts=True
+                            )
+                        ],
+                    )
 
-                    response, additional = st.session_state["explorer"].invoke(prompt, [st_callback])
-                    print(st_callback)
-                    print(dir(st_callback))
-                    
                     if isinstance(additional, matplotlib.figure.Figure):
                         st.session_state["chat_handler"].append(
                             role="assistant",
