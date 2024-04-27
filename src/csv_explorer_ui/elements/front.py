@@ -1,5 +1,7 @@
+from loguru import logger
 import matplotlib
 import openai
+import traceback
 
 import pandas as pd
 import streamlit as st
@@ -16,6 +18,7 @@ from csv_explorer_ui.elements.flow import (
     set_explorer,
     was_csv_just_uploaded,
 )
+
 
 
 def front():
@@ -97,5 +100,6 @@ def front():
                 if "reducing the temperature" in str(err):
                     st.error("A temperatura está muito alta. Tente reduzir.", icon="🌡️")
                 st.error("Houve um erro interno. Tente novamente.", icon="🚨")
-            except:
+            except Exception as err:
+                logger.error(traceback.print_exc())
                 st.error("Houve um erro interno. Tente novamente.", icon="❌")

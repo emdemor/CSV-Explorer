@@ -16,6 +16,7 @@ from langchain_experimental.agents.agent_toolkits import create_csv_agent
 import csv_explorer
 from csv_explorer.parsers.markdown_table import parse_markdown_text
 import pandas as pd
+import traceback
 
 TOOLS_FILEPATH = os.path.join(
     "/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py"
@@ -143,9 +144,13 @@ class CSVExplorer:
         Returns:
             list: A list of `memory_text` elements, which can be either Markdown-formatted strings or Pandas DataFrames.
         """
-        if _has_figure_in_answer(answer):
-            return self._parse_figures(query, answer)
-        return self._parse_markdown(query, answer)
+        try:
+            if _has_figure_in_answer(answer):
+                return self._parse_figures(query, answer)
+            return self._parse_markdown(query, answer)
+        except Exception as err:
+            logger.warning(traceback.print_exc())
+            return [answer['output']]
 
     def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[Any]:
         """
