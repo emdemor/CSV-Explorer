@@ -1,6 +1,7 @@
 import matplotlib
 import openai
 
+import pandas as pd
 import streamlit as st
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 
@@ -49,7 +50,7 @@ def front():
             )
 
             try:
-                response, additional = st.session_state["explorer"].invoke(
+                parsed_elements = st.session_state["explorer"].invoke(
                     prompt,
                     callbacks=[
                         StreamlitCallbackHandler(
@@ -58,40 +59,35 @@ def front():
                     ],
                 )
 
-                if isinstance(additional, matplotlib.figure.Figure):
-                    st.session_state["chat_handler"].append(
-                        role="assistant",
-                        content=response,
-                        type="markdown",
-                        render=True,
-                    )
-                    st.session_state["chat_handler"].append(
-                        role="assistant",
-                        content=additional,
-                        type="pyplot",
-                        render=True,
-                    )
+                for element in parsed_elements:
 
-                elif isinstance(additional, ToolResponse):
+                    if isinstance(element, matplotlib.figure.Figure):
+                        st.session_state["chat_handler"].append(
+                            role="assistant",
+                            content=element,
+                            type="pyplot",
+                            render=True,
+                        )
 
-                    st.session_state["chat_handler"].append(
-                        role="assistant",
-                        content=response,
-                        type="markdown",
-                        render=True,
-                    )
-                    st.session_state["chat_handler"].append(
-                        chat_element=additional.to_element(),
-                        render=True,
-                    )
+                    elif isinstance(element, pd.DataFrame):
+                        
+                        from tabulate import tabulate
+                        print(f"\n\n\n```\n{tabulate(element, tablefmt='github', headers='keys')}\n``` \n\n\n")
 
-                else:
-                    st.session_state["chat_handler"].append(
-                        role="assistant",
-                        content=response,
-                        type="markdown",
-                        render=True,
-                    )
+                        st.session_state["chat_handler"].append(
+                            role="assistant",
+                            content=element,
+                            type="dataframe",
+                            render=True,
+                        )
+
+                    else:
+                        st.session_state["chat_handler"].append(
+                            role="assistant",
+                            content=element,
+                            type="markdown",
+                            render=True,
+                        )
 
                 st.rerun()
 

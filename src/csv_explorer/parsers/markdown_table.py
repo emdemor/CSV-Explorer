@@ -17,7 +17,29 @@ MARKDOWN_TABLE_REPLACEMENTS: Dict[str, str] = {
 MARKDOWN_TABLE_REGEX = r"(?:\|.*\|\r?\n)+\|(?:-+\|)+\r?\n(?:\|.*\|\r?\n)+"
 
 
-def format_markdown_tables(text: str) -> str:
+def parse_markdown_text(text: str) -> Generator[Union[str, pd.DataFrame], None, None]:
+    """
+    Parses the given text, extracting and converting any markdown tables to Pandas DataFrames.
+
+    Args:
+        text (str): The input text to be parsed.
+
+    Yields:
+        Union[str, pd.DataFrame]: Either a string or a Pandas DataFrame, depending on the content of the input text.
+    """
+
+    formatted_text = _format_markdown_tables(text)
+    tables = _extract_markdown_tables(formatted_text)
+    pieces = _split_text_by_substrings(formatted_text, tables)
+
+    for i, piece in enumerate(pieces):
+        if i % 2 == 0:
+            yield piece
+        else:
+            yield md_to_pandas(piece)
+
+
+def _format_markdown_tables(text: str) -> str:
     """
     Formats the given text by replacing specific markdown table syntax with the appropriate formatting.
 
@@ -29,10 +51,10 @@ def format_markdown_tables(text: str) -> str:
     """
     for old, new in MARKDOWN_TABLE_REPLACEMENTS.items():
         text = text.replace(old, new)
-    return text
+    return text + "\n\n"
 
 
-def extract_markdown_tables(text: str) -> List[str]:
+def _extract_markdown_tables(text: str) -> List[str]:
     """
     Extracts all markdown tables from the given text.
 
@@ -45,7 +67,7 @@ def extract_markdown_tables(text: str) -> List[str]:
     return re.findall(MARKDOWN_TABLE_REGEX, text, re.MULTILINE)
 
 
-def split_text_by_substrings(text: str, substrings: List[str]) -> List[str]:
+def _split_text_by_substrings(text: str, substrings: List[str]) -> List[str]:
     """
     Splits the given text into a list of substrings based on the provided substrings.
 
@@ -77,24 +99,3 @@ def md_to_pandas(md_table_string: str) -> pd.DataFrame:
         if any(x not in ["|", "-", ":", " "] for x in line)
     ]
     return pd.DataFrame(content_lines[1:], columns=content_lines[0])
-
-
-def parse_markdown_text(text: str) -> Generator[Union[str, pd.DataFrame], None, None]:
-    """
-    Parses the given text, extracting and converting any markdown tables to Pandas DataFrames.
-
-    Args:
-        text (str): The input text to be parsed.
-
-    Yields:
-        Union[str, pd.DataFrame]: Either a string or a Pandas DataFrame, depending on the content of the input text.
-    """
-    formatted_text = format_markdown_tables(text)
-    tables = extract_markdown_tables(formatted_text)
-    pieces = split_text_by_substrings(formatted_text, tables)
-
-    for i, piece in enumerate(pieces):
-        if i % 2 == 0:
-            yield piece
-        else:
-            yield md_to_pandas(piece)
