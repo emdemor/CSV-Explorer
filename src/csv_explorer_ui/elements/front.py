@@ -20,7 +20,6 @@ from csv_explorer_ui.elements.flow import (
 )
 
 
-
 def front():
 
     page_config(layout="centered", sidebar="auto")
@@ -53,13 +52,11 @@ def front():
             )
 
             try:
+                callbacks = [
+                    StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)
+                ]
                 parsed_elements = st.session_state["explorer"].invoke(
-                    prompt,
-                    callbacks=[
-                        StreamlitCallbackHandler(
-                            st.container(), expand_new_thoughts=True
-                        )
-                    ],
+                    prompt, callbacks=callbacks
                 )
 
                 for element in parsed_elements:
