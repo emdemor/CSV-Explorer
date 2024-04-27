@@ -2,6 +2,7 @@ import os
 import ast
 import uuid
 import json
+import re
 from importlib import import_module
 from typing import Any, Optional
 
@@ -12,6 +13,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
 import csv_explorer
+from csv_explorer.tool_response import ToolResponse, ToolDataFrameResponse
 
 TOOLS_FILEPATH = os.path.join(
     "/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py"
@@ -192,7 +194,13 @@ class CSVExplorer:
 
     def _update_memory(self, query, answer):
 
-        logger.info((3 * "\n") + f"query = {query}\n" + str(answer))
+        
+
+        print(3 * "\n")
+        print(f"\nquery = {query}")
+        print(f"\nanswer['input'] = {answer['input']}")
+        print(f"\nanswer['output'] = {answer['output']}")
+
 
         if _has_figure_in_answer(answer):
             fig = plt.gcf()
@@ -211,9 +219,22 @@ class CSVExplorer:
             )
             return (answer["output"], fig)
 
+        
+        elif _has_dataframe_in_answer(answer):
+            dataframes = [
+                (action, result)
+                for action, result in answer["intermediate_steps"]
+                if isinstance(result, ToolDataFrameResponse)
+            ]
+            response = dataframes[-1][1]
+            self.memory.save_context({"input": query}, {"output": f'{answer["output"]}'})
+            output = re.sub(r'(?:^\|.*\|\s*$\n?)+', '', answer["output"], flags=re.MULTILINE)
+            print(f"\noutput = {output}")
+            return (output, response)
+
         self.memory.save_context({"input": query}, {"output": f'{answer["output"]}'})
 
-        return (answer["output"], None)
+        return (output, None)
 
     @classmethod
     def _set_temp_folder(cls):
@@ -282,6 +303,23 @@ def _has_figure_in_answer(answer):
     logger.info("No plot found in answer")
     return False
 
+def _has_dataframe_in_answer(answer):
+
+    if "intermediate_steps" not in answer:
+        logger.info("No intermediate steps found in answer")
+        return False
+
+    dataframes = [
+        (action, result)
+        for action, result in answer["intermediate_steps"]
+        if isinstance(result, ToolDataFrameResponse)
+    ]
+
+    if len(dataframes) > 0:
+        logger.info("Dataframe found in answer")
+        return True
+    logger.info("No Dataframe found in answer")
+    return False
 
 class AgentTypeNotRecognized(Exception):
     pass

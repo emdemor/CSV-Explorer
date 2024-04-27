@@ -4,6 +4,7 @@ import openai
 import streamlit as st
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 
+from csv_explorer.tool_response import ToolResponse
 from csv_explorer_ui import config
 from csv_explorer_ui.elements.settings import initiate_session_state, page_config
 from csv_explorer_ui.elements.sidebar import sidebar
@@ -47,53 +48,60 @@ def front():
                 role="user", content=prompt, type="markdown", render=True
             )
 
-            with st.spinner("Processando..."):
+            try:
+                response, additional = st.session_state["explorer"].invoke(
+                    prompt,
+                    callbacks=[
+                        StreamlitCallbackHandler(
+                            st.container(), expand_new_thoughts=True
+                        )
+                    ],
+                )
 
-                try:
-                    st_callback = response, additional = st.session_state[
-                        "explorer"
-                    ].invoke(
-                        prompt,
-                        [
-                            StreamlitCallbackHandler(
-                                st.container(), expand_new_thoughts=True
-                            )
-                        ],
+                if isinstance(additional, matplotlib.figure.Figure):
+                    st.session_state["chat_handler"].append(
+                        role="assistant",
+                        content=response,
+                        type="markdown",
+                        render=True,
+                    )
+                    st.session_state["chat_handler"].append(
+                        role="assistant",
+                        content=additional,
+                        type="pyplot",
+                        render=True,
                     )
 
-                    if isinstance(additional, matplotlib.figure.Figure):
-                        st.session_state["chat_handler"].append(
-                            role="assistant",
-                            content=response,
-                            type="markdown",
-                            render=True,
-                        )
-                        st.session_state["chat_handler"].append(
-                            role="assistant",
-                            content=additional,
-                            type="pyplot",
-                            render=True,
-                        )
+                elif isinstance(additional, ToolResponse):
 
-                    else:
-                        st.session_state["chat_handler"].append(
-                            role="assistant",
-                            content=response,
-                            type="markdown",
-                            render=True,
-                        )
+                    st.session_state["chat_handler"].append(
+                        role="assistant",
+                        content=response,
+                        type="markdown",
+                        render=True,
+                    )
+                    st.session_state["chat_handler"].append(
+                        chat_element=additional.to_element(),
+                        render=True,
+                    )
 
-                    st.rerun()
+                else:
+                    st.session_state["chat_handler"].append(
+                        role="assistant",
+                        content=response,
+                        type="markdown",
+                        render=True,
+                    )
 
-                except KeyError:
-                    pass
+                st.rerun()
 
-                except openai.AuthenticationError:
-                    st.error("Chave da API inválida.", icon="🚨")
+            except KeyError:
+                pass
 
-                except openai.InternalServerError as err:
-                    if "reducing the temperature" in str(err):
-                        st.error(
-                            "A temperatura está muito alta. Tente reduzir.", icon="🚨"
-                        )
-                    st.error("Houve um erro interno. Tente novamente.", icon="🚨")
+            except openai.AuthenticationError:
+                st.error("Chave da API inválida.", icon="🚨")
+
+            except openai.InternalServerError as err:
+                if "reducing the temperature" in str(err):
+                    st.error("A temperatura está muito alta. Tente reduzir.", icon="🚨")
+                st.error("Houve um erro interno. Tente novamente.", icon="🚨")

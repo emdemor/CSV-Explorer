@@ -7,6 +7,7 @@ from tabulate import tabulate
 import matplotlib.pyplot as plt
 from langchain_experimental.utilities import PythonREPL
 from csv_explorer_ui.config import PLT_STYLE
+from csv_explorer.tool_response import ToolResponse, ToolDataFrameResponse
 
 
 @tool
@@ -106,7 +107,7 @@ def get_column_names(csv_filepath: str) -> str:
 
 
 @tool
-def generate_descriptive_statistics(csv_filepath: str) -> str:
+def generate_descriptive_statistics(csv_filepath: str) -> ToolResponse:
     """
     Generate a formatted table of descriptive statistics for a given DataFrame from csv path.
     This function calculates descriptive statistics that summarize the central
@@ -115,7 +116,7 @@ def generate_descriptive_statistics(csv_filepath: str) -> str:
     each column. Can be used to describe the database and get some general insights.
     """
     try:
-        df = pd.read_csv(csv_filepath)
-        return tabulate(df.describe(include="all"), headers="keys")
+        df = pd.read_csv(csv_filepath).describe(include="all")
+        return ToolDataFrameResponse(df)
     except Exception as err:
         return f"[ERROR]. Not possible to run 'generate_descriptive_statistics'. Error: {err}"
