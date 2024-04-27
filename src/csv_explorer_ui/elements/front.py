@@ -70,10 +70,6 @@ def front():
                         )
 
                     elif isinstance(element, pd.DataFrame):
-                        
-                        from tabulate import tabulate
-                        print(f"\n\n\n```\n{tabulate(element, tablefmt='github', headers='keys')}\n``` \n\n\n")
-
                         st.session_state["chat_handler"].append(
                             role="assistant",
                             content=element,
@@ -99,5 +95,7 @@ def front():
 
             except openai.InternalServerError as err:
                 if "reducing the temperature" in str(err):
-                    st.error("A temperatura está muito alta. Tente reduzir.", icon="🚨")
+                    st.error("A temperatura está muito alta. Tente reduzir.", icon="🌡️")
                 st.error("Houve um erro interno. Tente novamente.", icon="🚨")
+            except:
+                st.error("Houve um erro interno. Tente novamente.", icon="❌")
