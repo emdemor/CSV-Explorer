@@ -88,8 +88,6 @@ def infer_column_types_of_csv_file(csv_filepath: str) -> str:
             else:
                 inferred_types[column] = "Other"
 
-        raise Exception("Not implemented yet")
-
         return ToolDataFrameResponse(
             pd.DataFrame(
                 [t for t in inferred_types.items()],
@@ -124,3 +122,16 @@ def generate_descriptive_statistics(csv_filepath: str) -> ToolResponse:
         return ToolDataFrameResponse(df)
     except Exception as err:
         return f"[ERROR]. Not possible to run 'generate_descriptive_statistics'. Error: {err}"
+
+
+@tool
+def python_evaluator(python_code: str, csv_filepath: str) -> str:
+    """
+    Use essa ferramente quando tiver que fazer cálculos complexos, que não podem ser oriundos da estatística descritiva.
+    """
+    try:
+        python_repl = PythonREPL()
+        python_repl.run(python_code)
+        return f"\n```\n{python_code}\n```\n"
+    except Exception as err:
+        return f"[ERROR] Not possible to run 'python_evaluator'. Error: {err}"
