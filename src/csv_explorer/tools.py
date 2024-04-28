@@ -127,11 +127,19 @@ def generate_descriptive_statistics(csv_filepath: str) -> ToolResponse:
 @tool
 def python_evaluator(python_code: str, csv_filepath: str) -> str:
     """
-    Use essa ferramente quando tiver que fazer cálculos complexos, que não podem ser oriundos da estatística descritiva.
+    Use this tool when you need to perform complex calculations that cannot be derived
+    from descriptive statistics. To use this tool, provide a Python code and the CSV
+    file path of the dataframe to be analyzed.
+
+    Attention: the `python_code` must have a `print` statement to return the result.
     """
+
+    if "print(" not in python_code:
+        return f"[ERROR] The python code `{python_code}` do no have the statement `print`."
+
     try:
         python_repl = PythonREPL()
-        python_repl.run(python_code)
-        return f"\n```\n{python_code}\n```\n"
+        response = python_repl.run(python_code)
+        return f"Code:\n```\n{python_code}\n```\n\nOutput:\n```\n{response}\n```"
     except Exception as err:
         return f"[ERROR] Not possible to run 'python_evaluator'. Error: {err}"

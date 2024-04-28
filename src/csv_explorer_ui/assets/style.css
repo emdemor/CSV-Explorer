@@ -104,6 +104,7 @@ div[data-testid="stFileUploaderDropzoneInstructions"] span {
     border-bottom-right-radius: 1.3rem;
     border-bottom-left-radius: 1.3rem;
     background-color: #f0f2f6 !important;
+    box-shadow: 3px 3px 7px #0000000d;
 }
 
 
@@ -201,3 +202,14 @@ div[data-testid="stSidebarContent"] li {
 }
 
 
+/* Expanders */
+div[data-testid="stExpander"] > details {
+    margin-bottom: 0px;
+    margin-top: 0px;
+    width: 100%;
+    border-style: solid;
+    border-width: 0;
+    border-color: rgb(63 49 49);
+    border-radius: 0.9rem;
+    background-color: #ffffff1f;
+}
