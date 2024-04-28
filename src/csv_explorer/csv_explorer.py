@@ -149,8 +149,15 @@ class CSVExplorer:
                 return self._parse_figures(query, answer)
             return self._parse_markdown(query, answer)
         except Exception as err:
-            logger.warning(traceback.print_exc())
-            return [answer['output']]
+            logger.warning(f"Error on parse_raw:\n{traceback.print_exc()}")
+            return self._parse_raw(query, answer)
+
+    def _parse_raw(self, query: str, answer: dict) -> list:
+        self.memory.save_context(
+            {"input": query},
+            {"output": [answer["output"]]},
+        )
+        return [answer["output"]]
 
     def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[Any]:
         """
