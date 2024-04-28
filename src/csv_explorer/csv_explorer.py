@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 import ast
 import uuid
@@ -42,6 +43,13 @@ LLM_MODELS = {
     "gpt-3.5-turbo": ChatOpenAI,
     "gpt-4": ChatOpenAI,
 }
+
+
+@dataclass
+class CSVExplorerResponse:
+    elements: List[Any]
+    intermediate_outputs: List[Any]
+    intermediate_actions: List[Any]
 
 
 class CSVExplorer:
@@ -100,7 +108,7 @@ class CSVExplorer:
         self._update_logs()
         return self
 
-    def invoke(self, query, callbacks=None):
+    def invoke(self, query, callbacks=None) -> CSVExplorerResponse:
         """
         Invokes the AI agent with a query and returns the response.
 
@@ -125,7 +133,11 @@ class CSVExplorer:
         answer = self.agent.invoke({"input": prompt}, {"callbacks": callbacks})
         response = self._parse_answer(query, answer)
         self._update_logs()
-        return response
+        return CSVExplorerResponse(
+            elements=response,
+            intermediate_outputs=[x[1] for x in answer["intermediate_steps"]],
+            intermediate_actions=[x[0] for x in answer["intermediate_steps"]],
+        )
 
     def _parse_answer(self, query: str, answer: dict) -> list:
         """
@@ -149,7 +161,7 @@ class CSVExplorer:
                 return self._parse_figures(query, answer)
             return self._parse_markdown(query, answer)
         except Exception as err:
-            logger.warning(f"Error on parse_raw:\n{traceback.print_exc()}")
+            logger.warning(f"Error on _parse_markdown:\n{traceback.print_exc()}")
             return self._parse_raw(query, answer)
 
     def _parse_raw(self, query: str, answer: dict) -> list:

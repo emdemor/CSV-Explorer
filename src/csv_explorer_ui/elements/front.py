@@ -55,11 +55,24 @@ def front():
                 callbacks = [
                     StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)
                 ]
-                parsed_elements = st.session_state["explorer"].invoke(
+                response = st.session_state["explorer"].invoke(
                     prompt, callbacks=callbacks
                 )
 
-                for element in parsed_elements:
+                # from time import sleep
+                # sleep(60)
+
+                for action, output in zip(response.intermediate_actions, response.intermediate_outputs):
+                    st.session_state["chat_handler"].append(
+                        role="assistant",
+                        content=output,
+                        type="write",
+                        render=True,
+                        parent="expander",
+                        parent_kwargs={"label": f"✅\t**{action.tool}**: {str(action.tool_input)[:50]}", "expanded": False},
+                    )
+
+                for element in response.elements:
 
                     if isinstance(element, matplotlib.figure.Figure):
                         st.session_state["chat_handler"].append(
