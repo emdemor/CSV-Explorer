@@ -11,7 +11,9 @@ from csv_explorer.tool_response import ToolResponse, ToolDataFrameResponse
 
 
 @tool
-def plot_generator(matplotlib_code: str, csv_filepath: str, plot_description: str) -> str:
+def plot_generator(
+    matplotlib_code: str, csv_filepath: str, plot_description: str
+) -> str:
     """
     Use this tool whenever you need to generate a plot (like pizza, histogram, line-plot, scatter-plot, heatmap and similars)
     It receives a matplotlib code, a csv_filepath and a plot_description, reads the data in CSV filepath and generates the plot.
@@ -27,40 +29,35 @@ def plot_generator(matplotlib_code: str, csv_filepath: str, plot_description: st
         "import numpy as np",
         "from cycler import cycler",
     ]
-    
+
     for _imp in imports:
         if _imp not in matplotlib_code:
             prefix = _imp + "\n" + prefix
-        
 
     if "import matplotlib.pyplot as plt" in prefix:
         prefix += "\n" + f"plt.style.use('{PLT_STYLE}')"
         prefix += "\n" + "plt.rcParams['figure.facecolor'] = 'none'"
         prefix += "\n" + "plt.rcParams['axes.facecolor'] = 'none'"
-        prefix += "\n" + "plt.rc('axes', prop_cycle=(cycler('color', ['#14149a', '#ec6810', '#4A8DC4', '#F24405', '#1C2641', '#F7A55A',  '#61408a', '#8C5483',  '#D99F6C', '#32088C',  '#e377c2', '#3314A6'])))"
-
-
-        
-    if "matplotlib.use('Agg')" not in prefix:
-        prefix = (
-            "import matplotlib\n" "matplotlib.use('Agg')\n" f"{prefix}"
+        prefix += (
+            "\n"
+            + "plt.rc('axes', prop_cycle=(cycler('color', ['#14149a', '#ec6810', '#4A8DC4', '#F24405', '#1C2641', '#F7A55A',  '#61408a', '#8C5483',  '#D99F6C', '#32088C',  '#e377c2', '#3314A6'])))"
         )
+
+    if "matplotlib.use('Agg')" not in prefix:
+        prefix = "import matplotlib\n" "matplotlib.use('Agg')\n" f"{prefix}"
 
     if f"pd.read_csv('{csv_filepath}')" not in matplotlib_code:
-        matplotlib_code = (
-            f"df = pd.read_csv('{csv_filepath}')\n\n"
-            f"{matplotlib_code}"
-        )
+        matplotlib_code = f"df = pd.read_csv('{csv_filepath}')\n\n" f"{matplotlib_code}"
 
     if "plt.show()" not in matplotlib_code:
         matplotlib_code = matplotlib_code + "\n" + "plt.show()"
-    
 
     matplotlib_code = prefix + "\n" + matplotlib_code
 
     try:
         python_repl = PythonREPL()
-        return python_repl.run(matplotlib_code)
+        python_repl.run(matplotlib_code)
+        return f"\n```\n{matplotlib_code}\n```\n"
     except Exception as err:
         return f"[ERROR] Not possible to run 'plot_generator'. Error: {err}"
 
@@ -91,7 +88,14 @@ def infer_column_types_of_csv_file(csv_filepath: str) -> str:
             else:
                 inferred_types[column] = "Other"
 
-        return json.dumps(inferred_types, indent=2, ensure_ascii=False)
+        raise Exception("Not implemented yet")
+
+        return ToolDataFrameResponse(
+            pd.DataFrame(
+                [t for t in inferred_types.items()],
+                columns=["column", "type"],
+            )
+        )
     except Exception as err:
         return f"[ERROR]. Not possible to run 'infer_column_types_of_csv_file'. Error: {err}"
 

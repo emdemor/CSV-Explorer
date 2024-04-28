@@ -12,3 +12,8 @@ STYLE_FILEPATH = str(resources.files("csv_explorer_ui.assets").joinpath("style.c
 EXAMPLES_PATH = resources.files("csv_explorer.examples")
 
 PLT_STYLE = str(resources.files("csv_explorer_ui.assets").joinpath("plots.mplstyle"))
+
+ICON_ALERT = "🚨"
+ICON_HIGH_TEMPERATURE = "🌡️"
+ICON_ERROR = "❌"
+ICON_SUCCESS = "✅"
