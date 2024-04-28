@@ -81,7 +81,7 @@ def _render_assistant_steps(response):
             element_type = "error"
         else:
             icon = config.ICON_SUCCESS
-            element_type = "markdown"
+            element_type = "write"
 
         st.session_state["chat_handler"].append(
             role="assistant",
