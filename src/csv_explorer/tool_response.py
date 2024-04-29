@@ -15,7 +15,7 @@ class ToolDataFrameResponse(ToolResponse):
         self.df = df
     
     def __str__(self):
-        return f"{tabulate(self.df, headers='keys')}"
+        return f"```\n{tabulate(self.df, headers='keys')}\n```"
 
     def __repr__(self):
         return f"{self.__class__.__name__}(response=DataFrame(n_rows={self.df.shape[0]}, n_columns={self.df.shape[1]}))"

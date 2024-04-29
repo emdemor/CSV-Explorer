@@ -1,13 +1,14 @@
-from loguru import logger
-import matplotlib
-import openai
 import traceback
 
+
+import matplotlib
+import openai
 import pandas as pd
 import streamlit as st
+from loguru import logger
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
+from streamlit_chat_handler.types import StreamlitChatElement
 
-from csv_explorer.tool_response import ToolResponse
 from csv_explorer_ui import config
 from csv_explorer_ui.elements.settings import initiate_session_state, page_config
 from csv_explorer_ui.elements.sidebar import sidebar
@@ -41,9 +42,8 @@ def front():
             _render_user_prompt(prompt)
             try:
                 response = _generate_response(prompt)
-                _render_assistant_steps(response)
                 _render_assistant_response(response)
-                st.rerun()
+                # st.rerun()
 
             except KeyError:
                 pass
@@ -53,11 +53,18 @@ def front():
 
             except openai.InternalServerError as err:
                 if "reducing the temperature" in str(err):
-                    st.error("A temperatura está muito alta. Tente reduzir.", icon=config.ICON_HIGH_TEMPERATURE)
-                st.error("Houve um erro interno. Tente novamente.", icon=config.ICON_ALERT)
+                    st.error(
+                        "A temperatura está muito alta. Tente reduzir.",
+                        icon=config.ICON_HIGH_TEMPERATURE,
+                    )
+                st.error(
+                    "Houve um erro interno. Tente novamente.", icon=config.ICON_ALERT
+                )
             except Exception as err:
                 logger.error(traceback.print_exc())
-                st.error("Houve um erro interno. Tente novamente.", icon=config.ICON_ERROR)
+                st.error(
+                    "Houve um erro interno. Tente novamente.", icon=config.ICON_ERROR
+                )
 
 
 def _render_user_prompt(prompt):
@@ -71,54 +78,56 @@ def _generate_response(prompt):
     return st.session_state["explorer"].invoke(prompt, callbacks=callbacks)
 
 
-def _render_assistant_steps(response):
-    for action, output in zip(
-        response.intermediate_actions, response.intermediate_outputs
-    ):
-
-        if "[ERROR]" in str(output):
-            icon = config.ICON_ERROR
-            element_type = "error"
-        else:
-            icon = config.ICON_SUCCESS
-            element_type = "write"
-
-        st.session_state["chat_handler"].append(
-            role="assistant",
-            content=output,
-            type=element_type,
-            render=True,
-            parent="expander",
-            parent_kwargs={
-                "label": f"{icon}\t\t  **{action.tool}**: {str(action.tool_input)[:100]}",
-                "expanded": False,
-            },
-        )
 
 
-def _render_assistant_response(response):
+
+def _parse_assistant_response(response) -> list[StreamlitChatElement]:
+    result = []
     for element in response.elements:
-
         if isinstance(element, matplotlib.figure.Figure):
-            st.session_state["chat_handler"].append(
-                role="assistant",
-                content=element,
-                type="pyplot",
-                render=True,
+            result.append(
+                StreamlitChatElement(
+                    role="assistant",
+                    type="pyplot",
+                    content=element,
+                    parent=None,
+                    parent_args=[],
+                    parent_kwargs={},
+                    args=[],
+                    kwargs={},
+                )
             )
 
         elif isinstance(element, pd.DataFrame):
-            st.session_state["chat_handler"].append(
-                role="assistant",
-                content=element,
-                type="dataframe",
-                render=True,
+            result.append(
+                StreamlitChatElement(
+                    role="assistant",
+                    type="dataframe",
+                    content=element,
+                    parent=None,
+                    parent_args=[],
+                    parent_kwargs={},
+                    args=[],
+                    kwargs={},
+                )
+            )
+        else:
+            result.append(
+                StreamlitChatElement(
+                    role="assistant",
+                    type="markdown",
+                    content=element,
+                    parent=None,
+                    parent_args=[],
+                    parent_kwargs={},
+                    args=[],
+                    kwargs={},
+                )
             )
 
-        else:
-            st.session_state["chat_handler"].append(
-                role="assistant",
-                content=element,
-                type="markdown",
-                render=True,
-            )
+    return result
+
+
+def _render_assistant_response(response):
+    parsed_response = _parse_assistant_response(response)
+    st.session_state["chat_handler"].append_multiple(parsed_response, response)

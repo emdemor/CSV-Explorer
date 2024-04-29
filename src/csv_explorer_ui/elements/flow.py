@@ -4,6 +4,7 @@ import pydantic
 import streamlit as st
 import pandas as pd
 from csv_explorer.csv_explorer import CSVExplorer
+from csv_explorer_ui import config
 
 
 
@@ -31,6 +32,8 @@ def prepare_csv():
         type="markdown",
         render=True,
     )
+    _add_instructions()
+    
     with st.spinner("Processando..."):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp_file:
             tmp_file.write(rendered["file_upload"].getvalue())
@@ -82,3 +85,19 @@ def set_explorer():
                 index="no-apt-key",
             )
 
+def _add_instructions():
+
+    with open(config.INSTRUCTIONS_PATH) as f:
+        instructions = f.read()
+
+    st.session_state["chat_handler"].append(
+        role="assistant",
+        content=instructions,
+        type="markdown",
+        render=True,
+        parent="popover",
+        parent_kwargs={
+            "label": f"Leia as instruções",
+            # "expanded": False,
+        },
+    )
