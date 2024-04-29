@@ -2,6 +2,8 @@ import re
 import pandas as pd
 from typing import List, Generator, Tuple, Dict, Union
 
+from csv_explorer.types import ChatDataFrameResponse, ChatMarkdownResponse, ChatResponse
+
 MARKDOWN_TABLE_REPLACEMENTS: Dict[str, str] = {
     "-:-": "---",
     "|:-": "|--",
@@ -17,7 +19,7 @@ MARKDOWN_TABLE_REPLACEMENTS: Dict[str, str] = {
 MARKDOWN_TABLE_REGEX = r"(?:\|.*\|\r?\n)+\|(?:-+\|)+\r?\n(?:\|.*\|\r?\n)+"
 
 
-def parse_markdown_text(text: str) -> Generator[Union[str, pd.DataFrame], None, None]:
+def parse_markdown_text(text: str) -> Generator[ChatResponse, None, None]:
     """
     Parses the given text, extracting and converting any markdown tables to Pandas DataFrames.
 
@@ -25,18 +27,18 @@ def parse_markdown_text(text: str) -> Generator[Union[str, pd.DataFrame], None, 
         text (str): The input text to be parsed.
 
     Yields:
-        Union[str, pd.DataFrame]: Either a string or a Pandas DataFrame, depending on the content of the input text.
+        Union[ChatMarkdownResponse, ChatDataFrameResponse]: Either a ChatMarkdownResponse or a ChatDataFrameResponse,
+        depending on the content of the input text.
     """
-
     formatted_text = _format_markdown_tables(text)
     tables = _extract_markdown_tables(formatted_text)
     pieces = _split_text_by_substrings(formatted_text, tables)
 
     for i, piece in enumerate(pieces):
         if i % 2 == 0:
-            yield piece
+            yield ChatMarkdownResponse(piece)
         else:
-            yield md_to_pandas(piece)
+            yield ChatDataFrameResponse(md_to_pandas(piece))
 
 
 def _format_markdown_tables(text: str) -> str:

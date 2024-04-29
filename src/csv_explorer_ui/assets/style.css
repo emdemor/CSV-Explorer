@@ -232,3 +232,62 @@ div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="b
     color: rgb(255, 255, 255);
     font-size: 14px;
 }
+
+
+/* Thumbs Down*/
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-secondary"]{
+    background-color: rgba(255, 255, 255, 0);
+    border-color: rgba(255, 255, 255, 0);
+    border-radius: 1rem;
+    padding-top: 0%;
+    padding-bottom: 0%;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-secondary"] > div[data-testid="stMarkdownContainer"] > p > strong {
+    color: rgb(190, 190, 190);
+}
+
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-secondary"] > div[data-testid="stMarkdownContainer"] > p > strong:hover {
+    color: red;
+    font-weight: 700;
+}
+
+/* Thumbs Up*/
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-primary"]{
+    background-color: rgba(255, 255, 255, 0);
+    border-color: rgba(255, 255, 255, 0);
+    border-radius: 1rem;
+    padding-top: 0%;
+    padding-bottom: 0%;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-primary"] > div[data-testid="stMarkdownContainer"] > p > strong {
+    color: rgb(190, 190, 190);
+}
+
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-primary"] > div[data-testid="stMarkdownContainer"] > p > strong:hover {
+    color: rgb(2, 179, 31);
+    font-weight: 700;
+}
+
+
+
+/*
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stMarkdown"] > div[data-testid="stMarkdownContainer"] > p > strong {
+    color: rgb(190, 190, 190);
+}
+
+div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stMarkdown"] > div[data-testid="stMarkdownContainer"] > p > strong:hover {
+    color: rgb(34, 129, 15);
+    font-weight: 700;
+    cursor: pointer;
+}
+*/
+
+
+
+

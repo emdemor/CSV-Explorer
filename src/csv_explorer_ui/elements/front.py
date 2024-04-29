@@ -1,6 +1,4 @@
 import traceback
-
-
 import matplotlib
 import openai
 import pandas as pd
@@ -9,6 +7,7 @@ from loguru import logger
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 from streamlit_chat_handler.types import StreamlitChatElement
 
+from csv_explorer.csv_explorer import CSVExplorerResponse
 from csv_explorer_ui import config
 from csv_explorer_ui.elements.settings import initiate_session_state, page_config
 from csv_explorer_ui.elements.sidebar import sidebar
@@ -20,8 +19,17 @@ from csv_explorer_ui.elements.flow import (
     was_csv_just_uploaded,
 )
 
-
 def front():
+    """
+    The main entry point for the CSV Explorer UI.
+
+    This function sets up the Streamlit page configuration, initiates the session state,
+    renders the sidebar, and handles the main flow of the application.
+
+    It checks if a CSV file is missing, if a new CSV file has been uploaded, and if the
+    application is in the dialog flow. Based on these conditions, it renders the appropriate
+    UI elements and handles user input and responses.
+    """
     page_config(layout="centered", sidebar="auto")
     initiate_session_state()
     sidebar()
@@ -65,68 +73,35 @@ def front():
                     "Houve um erro interno. Tente novamente.", icon=config.ICON_ERROR
                 )
 
-
 def _render_user_prompt(prompt):
+    """
+    Renders the user's prompt in the Streamlit chat interface.
+
+    Args:
+        prompt (str): The user's input prompt to be displayed.
+    """
     st.session_state["chat_handler"].append(
         role="user", content=prompt, type="markdown", render=True
     )
 
+def _generate_response(prompt: str) -> CSVExplorerResponse:
+    """
+    Generates a response for the given user prompt using the CSV Explorer's API.
 
-def _generate_response(prompt):
+    Args:
+        prompt (str): The user's input prompt.
+
+    Returns:
+        CSVExplorerResponse: The response object containing elements to be rendered.
+    """
     callbacks = [StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)]
     return st.session_state["explorer"].invoke(prompt, callbacks=callbacks)
 
+def _render_assistant_response(response: CSVExplorerResponse) -> None:
+    """
+    Renders the assistant's response in the Streamlit chat interface.
 
-
-
-
-def _parse_assistant_response(response) -> list[StreamlitChatElement]:
-    result = []
-    for element in response.elements:
-        if isinstance(element, matplotlib.figure.Figure):
-            result.append(
-                StreamlitChatElement(
-                    role="assistant",
-                    type="pyplot",
-                    content=element,
-                    parent=None,
-                    parent_args=[],
-                    parent_kwargs={},
-                    args=[],
-                    kwargs={},
-                )
-            )
-
-        elif isinstance(element, pd.DataFrame):
-            result.append(
-                StreamlitChatElement(
-                    role="assistant",
-                    type="dataframe",
-                    content=element,
-                    parent=None,
-                    parent_args=[],
-                    parent_kwargs={},
-                    args=[],
-                    kwargs={},
-                )
-            )
-        else:
-            result.append(
-                StreamlitChatElement(
-                    role="assistant",
-                    type="markdown",
-                    content=element,
-                    parent=None,
-                    parent_args=[],
-                    parent_kwargs={},
-                    args=[],
-                    kwargs={},
-                )
-            )
-
-    return result
-
-
-def _render_assistant_response(response):
-    parsed_response = _parse_assistant_response(response)
-    st.session_state["chat_handler"].append_multiple(parsed_response, response)
+    Args:
+        response (CSVExplorerResponse): The response object containing elements to be rendered.
+    """
+    st.session_state["chat_handler"].append_multiple(response.elements, render=True)

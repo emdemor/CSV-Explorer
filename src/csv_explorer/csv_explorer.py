@@ -19,6 +19,8 @@ from csv_explorer.parsers.markdown_table import parse_markdown_text
 import pandas as pd
 import traceback
 
+from csv_explorer.types import ChatDataFrameResponse, ChatMarkdownResponse, ChatResponse
+
 TOOLS_FILEPATH = os.path.join(
     "/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py"
 )
@@ -134,7 +136,7 @@ class CSVExplorer:
         response = self._parse_answer(query, answer)
         self._update_logs()
         return CSVExplorerResponse(
-            elements=response,
+            elements=[x.to_element() for x in response],
             intermediate_outputs=[x[1] for x in answer["intermediate_steps"]],
             intermediate_actions=[x[0] for x in answer["intermediate_steps"]],
         )
@@ -164,14 +166,24 @@ class CSVExplorer:
             logger.warning(f"Error on _parse_markdown:\n{traceback.print_exc()}")
             return self._parse_raw(query, answer)
 
-    def _parse_raw(self, query: str, answer: dict) -> list:
+    def _parse_raw(self, query: str, answer: dict) -> list[ChatResponse]:
+        """
+        Parses the raw response from the language model and saves the context.
+
+        Args:
+            query (str): The original user query.
+            answer (dict): The response dictionary from the language model, containing the output.
+
+        Returns:
+            list[ChatResponse]: A list of ChatResponse objects representing the parsed response.
+        """
         self.memory.save_context(
             {"input": query},
             {"output": [answer["output"]]},
         )
-        return [answer["output"]]
+        return [ChatMarkdownResponse(answer["output"])]
 
-    def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[Any]:
+    def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[ChatResponse]:
         """
         Parses plotting information from a given answer and updates the context memory.
         Sets the background color of the current figure to transparent.
@@ -188,17 +200,22 @@ class CSVExplorer:
         fig = plt.gcf()
         fig.set_facecolor("none")
 
-        action = answer["intermediate_steps"][-1][0]
+        action, response = answer["intermediate_steps"][-1]
 
         self.memory.save_context(
             {"input": query},
             {
-                "output": f'{answer["output"] + ": " + str(action.tool_input["plot_description"])}'
+                "output": (
+                    f'{answer["output"]} | '
+                    f'Title: {str(action.tool_input["plot_description"])} | '
+                    f'Code: {str(response)}.'
+
+                )
             },
         )
-        return [answer["output"], fig]
+        return [ChatMarkdownResponse(answer["output"]), response]
 
-    def _parse_markdown(self, query: str, answer: Dict[str, Any]) -> List[Any]:
+    def _parse_markdown(self, query: str, answer: Dict[str, Any]) -> List[ChatResponse]:
         """
         Processes the markdown output from an answer dictionary, handles tables represented
         by pandas DataFrames, and updates the memory context.
@@ -213,9 +230,9 @@ class CSVExplorer:
         if present.
         """
 
-        elements = [x for x in parse_markdown_text(answer["output"])]
-        memory_text = [
-            e.to_markdown() if isinstance(e, pd.DataFrame) else str(e) for e in elements
+        elements: list[ChatResponse] = [x for x in parse_markdown_text(answer["output"])]
+        memory_text: list[str] = [
+            e.df.to_markdown() if isinstance(e, ChatDataFrameResponse) else str(e) for e in elements
         ]
         self.memory.save_context(
             {"input": query},
