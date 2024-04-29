@@ -60,7 +60,7 @@ def prepare_csv():
             render=True,
         )
 
-        st.rerun()
+        st.toast("✔️ Arquivo carregado.")
 
 
 def set_explorer():

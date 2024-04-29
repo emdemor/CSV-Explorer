@@ -43,7 +43,6 @@ def front():
             try:
                 response = _generate_response(prompt)
                 _render_assistant_response(response)
-                # st.rerun()
 
             except KeyError:
                 pass
