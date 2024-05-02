@@ -56,3 +56,6 @@ update-vdb:
 
 load-vdb:
 	dvc pull
+
+lrun:
+	csv_explorer frontend start

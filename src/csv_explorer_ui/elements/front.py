@@ -1,13 +1,16 @@
+import json
 import traceback
+from typing import NamedTuple
 import matplotlib
 import openai
 import pandas as pd
+from pydantic import BaseModel
 import streamlit as st
 from loguru import logger
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 from streamlit_chat_handler.types import StreamlitChatElement
 
-from csv_explorer.csv_explorer import CSVExplorerResponse
+from csv_explorer.csv_explorer import ChatResponse
 from csv_explorer_ui import config
 from csv_explorer_ui.elements.settings import initiate_session_state, page_config
 from csv_explorer_ui.elements.sidebar import sidebar
@@ -18,6 +21,13 @@ from csv_explorer_ui.elements.flow import (
     set_explorer,
     was_csv_just_uploaded,
 )
+
+
+class InteractionStep(NamedTuple):
+    prompt: str
+    response: ChatResponse
+    rating: int | None = None
+
 
 def front():
     """
@@ -41,37 +51,48 @@ def front():
         st.session_state["csv_filepath"] = None
 
     if was_csv_just_uploaded():
+        st.session_state.counter += 1
         prepare_csv()
 
     if is_in_dialog_flow():
+        logger.info(f"Iniciando a interação {st.session_state.counter}")
         set_explorer()
         prompt = st.chat_input("Digite aqui...")
         if prompt and ("explorer" in st.session_state):
+            st.session_state.counter += 1
             _render_user_prompt(prompt)
             try:
                 response = _generate_response(prompt)
+                _set_interaction_metadata(prompt, response)
+                _persist_logs()
                 _render_assistant_response(response)
 
-            except KeyError:
-                pass
+            except KeyError as err:
+                msg = str(traceback.print_exc())
+                logger.error(msg)
+                st.error(msg, icon=config.ICON_ALERT)
 
             except openai.AuthenticationError:
-                st.error("Chave da API inválida.", icon=config.ICON_ALERT)
+                msg = "Chave da API inválida."
+                logger.error(msg)
+                st.error(msg, icon=config.ICON_ALERT)
 
             except openai.InternalServerError as err:
                 if "reducing the temperature" in str(err):
-                    st.error(
-                        "A temperatura está muito alta. Tente reduzir.",
-                        icon=config.ICON_HIGH_TEMPERATURE,
-                    )
-                st.error(
-                    "Houve um erro interno. Tente novamente.", icon=config.ICON_ALERT
-                )
+                    msg = "A temperatura está muito alta. Tente reduzir."
+                    st.error(msg, icon=config.ICON_HIGH_TEMPERATURE)
+                else:
+                    msg = "Houve um erro interno. Tente novamente."
+                    st.error(msg, icon=config.ICON_ALERT)
+                logger.error(msg)
+
             except Exception as err:
                 logger.error(traceback.print_exc())
                 st.error(
                     "Houve um erro interno. Tente novamente.", icon=config.ICON_ERROR
                 )
+                st.error(msg, icon=config.ICON_ALERT)
+
 
 def _render_user_prompt(prompt):
     """
@@ -80,11 +101,13 @@ def _render_user_prompt(prompt):
     Args:
         prompt (str): The user's input prompt to be displayed.
     """
+    logger.info(f"Usuário digitou a mensagem '{prompt}'")
     st.session_state["chat_handler"].append(
         role="user", content=prompt, type="markdown", render=True
     )
 
-def _generate_response(prompt: str) -> CSVExplorerResponse:
+
+def _generate_response(prompt: str) -> ChatResponse:
     """
     Generates a response for the given user prompt using the CSV Explorer's API.
 
@@ -92,16 +115,57 @@ def _generate_response(prompt: str) -> CSVExplorerResponse:
         prompt (str): The user's input prompt.
 
     Returns:
-        CSVExplorerResponse: The response object containing elements to be rendered.
+        ChatResponse: The response object containing elements to be rendered.
     """
     callbacks = [StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)]
-    return st.session_state["explorer"].invoke(prompt, callbacks=callbacks)
+    response = st.session_state["explorer"].invoke(prompt, callbacks=callbacks)
+    logger.info(f"Recebendo a resposta {response}")
+    return response
 
-def _render_assistant_response(response: CSVExplorerResponse) -> None:
+
+def _render_assistant_response(response: ChatResponse) -> None:
     """
     Renders the assistant's response in the Streamlit chat interface.
 
     Args:
-        response (CSVExplorerResponse): The response object containing elements to be rendered.
+        response (ChatResponse): The response object containing elements to be rendered.
     """
+    logger.info(f"Renderizando a resposta {response}")
     st.session_state["chat_handler"].append_multiple(response.elements, render=True)
+
+
+def _set_interaction_metadata(prompt: str, response: ChatResponse) -> None:
+    """
+    Set the interaction metadata in the session state.
+
+    This function takes a prompt and a ChatResponse object, and stores them in the session state
+    along with the rating for the current interaction step.
+
+    Args:
+        prompt (str): The prompt for the current interaction step.
+        response (ChatResponse): The response object for the current interaction step.
+    """
+    logger.info(f"Formatando os metadadaos da interação")
+    if f"{st.session_state.counter}_rating" not in st.session_state.interactions:
+        rating = None
+    else:
+        rating = st.session_state.interactions[f"{st.session_state.counter}_rating"]
+
+    metadata = InteractionStep(
+        prompt=prompt,
+        response=response,
+        rating=rating,
+    )
+    st.session_state.interactions[st.session_state.counter] = metadata
+
+    logger.info(
+        f"Interation metadata: {st.session_state.interactions[st.session_state.counter]}"
+    )
+
+
+def _persist_logs():
+    logger.info(f"Persistindo os logs")
+
+    extracted_messages = [x.__repr__() for x in st.session_state["explorer"].memory.chat_memory.messages]
+    with open(config.MEMORY_LOGS_PATH, "w") as file:
+        file.write(json.dumps(extracted_messages, indent=4, ensure_ascii=False))

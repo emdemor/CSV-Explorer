@@ -214,6 +214,10 @@ div[data-testid="stExpander"] > details {
     background-color: #ffffff1f;
 }
 
+
+
+
+/* Instruções */
 div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="baseButton-secondary"] {
     padding: 0.25rem 0.75rem;
     border-radius: 1.1rem;
@@ -221,17 +225,51 @@ div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="b
     margin: 0px;
     line-height: 1.6;
     color: rgb(255, 255, 255);
-    /* background-color: #ec6810; */
     background-image: linear-gradient(30deg, #ec6810 30%, #F09819  90%);
     border: 0px solid rgba(49, 51, 63, 0.0);
 }
 
-div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="baseButton-secondary"] div[data-testid="stMarkdownContainer"] > p {
+ div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="baseButton-secondary"] div[data-testid="stMarkdownContainer"] > p {
     font-weight: 600;
     line-height: 1.6;
     color: rgb(255, 255, 255);
     font-size: 14px;
 }
+
+/*Avaliação*/
+div[data-testid="stVerticalBlock"] >  div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div[data-testid="stVerticalBlockBorderWrapper"] > div > div[data-testid="stVerticalBlock"] >   div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="baseButton-secondary"] {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1.1rem;
+    min-height: 38.4px;
+    margin: 0px;
+    line-height: 1.6;
+    color: rgb(175, 175, 175);
+    /* background-color: #e5e9ee; */
+    background-image: linear-gradient(30deg, #e5e9ee 30%, #e5e9ee  90%);
+    border: 0px solid rgba(49, 51, 63, 0.0);
+}
+
+div[data-testid="stVerticalBlock"] >  div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div[data-testid="stVerticalBlockBorderWrapper"] > div > div[data-testid="stVerticalBlock"] >   div[data-testid="stPopover"] > div[aria-haspopup="true"] > button[data-testid="baseButton-secondary"] div[data-testid="stMarkdownContainer"] > p {
+    font-weight: 600;
+    line-height: 1.6;
+    color: rgb(175, 175, 175);
+    font-size: 14px;
+}
+
+div[data-testid="stPopoverBody"] div[data-testid="stForm"] {
+    border-radius: 0.5rem;
+    padding: calc(0.5em - 1px);
+    border: 0px solid rgba(49, 51, 63, 0.0);
+  }
+
+
+  div[data-autofocus-inside="true"] > div[data-testid="stPopoverBody"] {
+    background-color: #e5e9ee;
+ }
+
+ div[data-autofocus-inside="true"] > div[data-testid="stPopoverBody"] > div {
+    background-color: #e5e9ee;
+ }
 
 
 /* Thumbs Down*/
@@ -254,40 +292,26 @@ div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBor
     font-weight: 700;
 }
 
-/* Thumbs Up*/
-div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-primary"]{
-    background-color: rgba(255, 255, 255, 0);
-    border-color: rgba(255, 255, 255, 0);
+div[data-testid="stFormSubmitButton"] > button[data-testid="baseButton-secondaryFormSubmit"] {
+    padding: 0.0rem 1.5rem;
     border-radius: 1rem;
-    padding-top: 0%;
-    padding-bottom: 0%;
-    padding-left: 5px;
-    padding-right: 5px;
+    background-image: linear-gradient(30deg, #ec6810 30%, #F09819 90%);
+    border-color: #0000000d;
 }
 
-div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-primary"] > div[data-testid="stMarkdownContainer"] > p > strong {
-    color: rgb(190, 190, 190);
+div[data-testid="stFormSubmitButton"] > button[data-testid="baseButton-secondaryFormSubmit"]:hover {
+    border-color: #0000000d;
 }
 
-div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button[data-testid="baseButton-primary"] > div[data-testid="stMarkdownContainer"] > p > strong:hover {
-    color: rgb(2, 179, 31);
+div[data-testid="stFormSubmitButton"] > button[data-testid="baseButton-secondaryFormSubmit"] p {
+    color: white;
+}
+div[data-testid="stFormSubmitButton"] > button[data-testid="baseButton-secondaryFormSubmit"] p:hover {
     font-weight: 700;
 }
 
-
-
-/*
-div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stMarkdown"] > div[data-testid="stMarkdownContainer"] > p > strong {
-    color: rgb(190, 190, 190);
+div[data-testid="element-container"] > div.row-widget > div[data-testid="stFormSubmitButton"] {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
-
-div[data-testid="stHorizontalBlock"] > div > div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stMarkdown"] > div[data-testid="stMarkdownContainer"] > p > strong:hover {
-    color: rgb(34, 129, 15);
-    font-weight: 700;
-    cursor: pointer;
-}
-*/
-
-
-
-

@@ -15,6 +15,8 @@ PLT_STYLE = str(resources.files("csv_explorer_ui.assets").joinpath("plots.mplsty
 
 INSTRUCTIONS_PATH = str(resources.files("csv_explorer_ui.assets").joinpath("instructions.md"))
 
+MEMORY_LOGS_PATH = "logs/memory.txt"
+
 ICON_ALERT = "🚨"
 ICON_HIGH_TEMPERATURE = "🌡️"
 ICON_ERROR = "❌"

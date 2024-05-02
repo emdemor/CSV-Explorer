@@ -13,8 +13,20 @@ def initiate_session_state() -> None:
     if "csv_filepath" not in st.session_state:
         st.session_state["csv_filepath"] = None
 
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = OrderedDict({})
+    if "interactions" not in st.session_state:
+        st.session_state["interactions"] = OrderedDict({})
+
+    if "ratings" not in st.session_state:
+        st.session_state["ratings"] = OrderedDict({})
+
+    if "comments" not in st.session_state:
+        st.session_state["comments"] = OrderedDict({})
+    
+    if "rating_indexes" not in st.session_state:
+        st.session_state["rating_indexes"] = OrderedDict({})
+
+    if "counter" not in st.session_state:
+        st.session_state["counter"] = 0
 
     if "chat_handler" not in st.session_state:
         st.session_state["chat_handler"] = StreamlitChatHandler(

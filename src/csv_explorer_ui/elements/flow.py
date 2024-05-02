@@ -1,10 +1,12 @@
 import tempfile
 
+from loguru import logger
 import pydantic
 import streamlit as st
 import pandas as pd
 from csv_explorer.csv_explorer import CSVExplorer
 from csv_explorer_ui import config
+from streamlit_chat_handler.types import StreamlitChatElement
 
 
 
@@ -25,6 +27,7 @@ def is_in_dialog_flow():
 
 
 def prepare_csv():
+    logger.info("Preparing CSV file...")
     rendered = st.session_state["chat_handler"].rendered_elements
     st.session_state["chat_handler"].append(
         role="user",
@@ -39,28 +42,29 @@ def prepare_csv():
             tmp_file.write(rendered["file_upload"].getvalue())
             st.session_state["csv_filepath"] = tmp_file.name
 
-        st.session_state["chat_handler"].append(
-            role="assistant",
-            content="Aqui estão as primeiras linhas do dataframe:",
-            type="markdown",
-            render=True,
-        )
+        elements = [
+            StreamlitChatElement(
+                role="assistant",
+                type="markdown",
+                content="Aqui estão as primeiras linhas do dataframe:",
+            ),
 
-        st.session_state["chat_handler"].append(
-            role="assistant",
-            content=pd.read_csv(st.session_state["csv_filepath"]).head(10),
-            type="dataframe",
-            render=True,
-        )
+            StreamlitChatElement(
+                role="assistant",
+                type="dataframe",
+                content=pd.read_csv(st.session_state["csv_filepath"]).head(10),
+            ),
 
-        st.session_state["chat_handler"].append(
-            role="assistant",
-            content="O que você gostaria de saber sobre esse dataframe?",
-            type="markdown",
-            render=True,
-        )
-
+            StreamlitChatElement(
+                role="assistant",
+                type="markdown",
+                content="O que você gostaria de saber sobre esse dataframe?",
+                index="csv_prepared",
+            ),
+        ]
+        st.session_state["chat_handler"].append_multiple(elements, render=True)
         st.toast("✔️ Arquivo carregado.")
+        st.rerun()
 
 
 def set_explorer():
@@ -98,6 +102,5 @@ def _add_instructions():
         parent="popover",
         parent_kwargs={
             "label": f"Leia as instruções",
-            # "expanded": False,
         },
     )
