@@ -21,7 +21,7 @@ DOCKER_COMPOSE := docker-compose -f $(DOCKER_COMPOSE_FILEPATH)
 RUNNING_CONTAINERS = $(docker ps -a -q)
 
 RUN_JUPYTER := $(DOCKER_RUN) $(DOCKER_ENV) -v ./notebooks:/project/notebooks -p $(JUPYTER_PORT):$(JUPYTER_PORT) $(JUPYTER_IMAGE)
-RUN_FRONT := $(DOCKER_RUN) $(DOCKER_ENV) -p $(FRONT_PORT):$(FRONT_PORT) $(FRONT_IMAGE)
+RUN_FRONT := $(DOCKER_RUN) $(DOCKER_ENV) -v ./logs:/app/logs -p $(FRONT_PORT):$(FRONT_PORT) $(FRONT_IMAGE)
 
 build: build-jupyter build-front
 
@@ -56,3 +56,6 @@ update-vdb:
 
 load-vdb:
 	dvc pull
+
+lrun:
+	csv_explorer frontend start

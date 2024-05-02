@@ -1,23 +1,20 @@
-from dataclasses import dataclass
 import os
 import ast
-import uuid
-import json
-import re
 from importlib import import_module
 from typing import Any, Dict, List, Optional
 
-import matplotlib
 import matplotlib.pyplot as plt
 from loguru import logger
 from langchain.memory.buffer_window import ConversationBufferWindowMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
+from pydantic import BaseModel
 import csv_explorer
 from csv_explorer.parsers.markdown_table import parse_markdown_text
-import pandas as pd
 import traceback
+
+from csv_explorer.types import ChatDataFrameResponse, ChatMarkdownResponse, ChatResponse
 
 TOOLS_FILEPATH = os.path.join(
     "/".join(os.path.abspath(csv_explorer.__file__).split("/")[:-1]), "tools.py"
@@ -45,8 +42,8 @@ LLM_MODELS = {
 }
 
 
-@dataclass
-class CSVExplorerResponse:
+class ChatResponse(BaseModel):
+    output: str
     elements: List[Any]
     intermediate_outputs: List[Any]
     intermediate_actions: List[Any]
@@ -105,10 +102,9 @@ class CSVExplorer:
             return_intermediate_steps=True,
             handle_parsing_errors=True,
         )
-        self._update_logs()
         return self
 
-    def invoke(self, query, callbacks=None) -> CSVExplorerResponse:
+    def invoke(self, query: str, callbacks=None) -> ChatResponse:
         """
         Invokes the AI agent with a query and returns the response.
 
@@ -119,7 +115,55 @@ class CSVExplorer:
             str: The response from the AI agent.
         """
 
-        prompt = (
+        prompt = self._set_prompt(query)
+        answer = self.agent.invoke({"input": prompt}, {"callbacks": callbacks})
+        response = self._parse_answer(query, answer)
+        return self._format_chat_response(answer, response)
+
+    def _format_chat_response(
+        self, answer: Dict[str, Any], response
+    ) -> list[ChatResponse]:
+        """
+        Formats and constructs a list of ChatResponse objects based on the provided answer dictionary
+        and response elements.
+
+        This method takes the output and intermediate steps from the answer dictionary, and transforms
+        response elements into their corresponding object format. The `ChatResponse` objects encapsulate
+        the final output, interactive elements, and the sequences of intermediate outputs and actions.
+
+        Args:
+        answer (Dict[str, Any]): A dictionary containing the final output text and intermediate steps
+                                where each step includes an action and its output.
+        response (iterable): An iterable of objects that need to be transformed into interactive elements
+                            as part of the chat response.
+
+        Returns:
+        list[ChatResponse]: A list containing a single ChatResponse object, which includes the main output,
+                            interactive elements, and lists of intermediate outputs and actions.
+        """
+        return ChatResponse(
+            output=answer["output"],
+            elements=[x.to_element() for x in response],
+            intermediate_outputs=[x[1] for x in answer["intermediate_steps"]],
+            intermediate_actions=[x[0] for x in answer["intermediate_steps"]],
+        )
+
+    def _set_prompt(self, query: str) -> str:
+        """
+        Formats and returns a prompt string for executing in a different context based on the given query.
+
+        This method constructs a multi-line prompt that includes instructions and guidelines for processing data,
+        formatting output, and interaction rules within a specified tool environment. The prompt includes reading
+        a CSV file, output formatting preferences, language specifications, and additional guidelines about plot
+        generation and markdown syntax.
+
+        Args:
+        query (str): The user's input query that will be appended to the conversation history in the prompt.
+
+        Returns:
+        str: A formatted string that serves as a prompt for further processing in another context.
+        """
+        return (
             "# Siga TODAS as seguintes instruções\n"
             f"- Leia os dados do csv '{self.filepath}'.\n"
             f"- Formate os outputs para markdown.\n"
@@ -129,14 +173,6 @@ class CSVExplorer:
             "Quando for pasar o código do matplotlib para a tool, não esqueça de passar a instrucao `plt.show()`\n\n"
             "# Histórico de conversa\n"
             f"{self.memory.buffer_as_str}\n{self.memory.human_prefix}: {query}\n\n"
-        )
-        answer = self.agent.invoke({"input": prompt}, {"callbacks": callbacks})
-        response = self._parse_answer(query, answer)
-        self._update_logs()
-        return CSVExplorerResponse(
-            elements=response,
-            intermediate_outputs=[x[1] for x in answer["intermediate_steps"]],
-            intermediate_actions=[x[0] for x in answer["intermediate_steps"]],
         )
 
     def _parse_answer(self, query: str, answer: dict) -> list:
@@ -164,14 +200,24 @@ class CSVExplorer:
             logger.warning(f"Error on _parse_markdown:\n{traceback.print_exc()}")
             return self._parse_raw(query, answer)
 
-    def _parse_raw(self, query: str, answer: dict) -> list:
+    def _parse_raw(self, query: str, answer: dict) -> list[ChatResponse]:
+        """
+        Parses the raw response from the language model and saves the context.
+
+        Args:
+            query (str): The original user query.
+            answer (dict): The response dictionary from the language model, containing the output.
+
+        Returns:
+            list[ChatResponse]: A list of ChatResponse objects representing the parsed response.
+        """
         self.memory.save_context(
             {"input": query},
             {"output": [answer["output"]]},
         )
-        return [answer["output"]]
+        return [ChatMarkdownResponse(answer["output"])]
 
-    def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[Any]:
+    def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[ChatResponse]:
         """
         Parses plotting information from a given answer and updates the context memory.
         Sets the background color of the current figure to transparent.
@@ -188,17 +234,21 @@ class CSVExplorer:
         fig = plt.gcf()
         fig.set_facecolor("none")
 
-        action = answer["intermediate_steps"][-1][0]
+        action, response = answer["intermediate_steps"][-1]
 
         self.memory.save_context(
             {"input": query},
             {
-                "output": f'{answer["output"] + ": " + str(action.tool_input["plot_description"])}'
+                "output": (
+                    f'{answer["output"]} | '
+                    f'Title: {str(action.tool_input["plot_description"])} | '
+                    f"Code: {str(response)}."
+                )
             },
         )
-        return [answer["output"], fig]
+        return [ChatMarkdownResponse(answer["output"]), response]
 
-    def _parse_markdown(self, query: str, answer: Dict[str, Any]) -> List[Any]:
+    def _parse_markdown(self, query: str, answer: Dict[str, Any]) -> List[ChatResponse]:
         """
         Processes the markdown output from an answer dictionary, handles tables represented
         by pandas DataFrames, and updates the memory context.
@@ -213,9 +263,12 @@ class CSVExplorer:
         if present.
         """
 
-        elements = [x for x in parse_markdown_text(answer["output"])]
-        memory_text = [
-            e.to_markdown() if isinstance(e, pd.DataFrame) else str(e) for e in elements
+        elements: list[ChatResponse] = [
+            x for x in parse_markdown_text(answer["output"])
+        ]
+        memory_text: list[str] = [
+            e.df.to_markdown() if isinstance(e, ChatDataFrameResponse) else str(e)
+            for e in elements
         ]
         self.memory.save_context(
             {"input": query},
@@ -373,23 +426,6 @@ class CSVExplorer:
     @classmethod
     def _set_temp_folder(cls):
         _create_directory_if_not_exists(cls.temp_filepath)
-
-    def _update_logs(self) -> None:
-        """
-        Updates the log file with representations of chat messages stored in memory.
-
-        This method extracts string representations of messages from the chat memory, converts
-        them into a JSON formatted string, and writes them to a file named 'logs.txt'.
-        Each message is represented by its `__repr__()` method, ensuring detailed logging.
-
-        Uses:
-            - `logging` module to log the updating action.
-            - JSON serialization for writing logs in a readable format.
-        """
-        logger.info("Updating logs")
-        extracted_messages = [x.__repr__() for x in self.memory.chat_memory.messages]
-        with open("logs/memory.txt", "w") as file:
-            file.write(json.dumps(extracted_messages, indent=4, ensure_ascii=False))
 
 
 def _create_directory_if_not_exists(folderpath: str) -> None:

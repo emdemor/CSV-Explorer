@@ -7,13 +7,13 @@ from tabulate import tabulate
 import matplotlib.pyplot as plt
 from langchain_experimental.utilities import PythonREPL
 from csv_explorer_ui.config import PLT_STYLE
-from csv_explorer.tool_response import ToolResponse, ToolDataFrameResponse
+from csv_explorer.types import ChatFigureResponse, ChatResponse, ChatDataFrameResponse, ChatPythonREPLResponse
 
 
 @tool
 def plot_generator(
     matplotlib_code: str, csv_filepath: str, plot_description: str
-) -> str:
+) -> ChatResponse:
     """
     Use this tool whenever you need to generate a plot (like pizza, histogram, line-plot, scatter-plot, heatmap and similars)
     It receives a matplotlib code, a csv_filepath and a plot_description, reads the data in CSV filepath and generates the plot.
@@ -57,13 +57,13 @@ def plot_generator(
     try:
         python_repl = PythonREPL()
         python_repl.run(matplotlib_code)
-        return f"\n```\n{matplotlib_code}\n```\n"
+        return ChatFigureResponse(code=matplotlib_code)
     except Exception as err:
         return f"[ERROR] Not possible to run 'plot_generator'. Error: {err}"
 
 
 @tool
-def infer_column_types_of_csv_file(csv_filepath: str) -> str:
+def infer_column_types_of_csv_file(csv_filepath: str) -> ChatResponse:
     """
     Infers the types of columns in a CSV file and categorizes them as 'Numeric',
     'Categorical', 'Boolean', 'Text', or 'Other'.
@@ -88,7 +88,7 @@ def infer_column_types_of_csv_file(csv_filepath: str) -> str:
             else:
                 inferred_types[column] = "Other"
 
-        return ToolDataFrameResponse(
+        return ChatDataFrameResponse(
             pd.DataFrame(
                 [t for t in inferred_types.items()],
                 columns=["column", "type"],
@@ -109,7 +109,7 @@ def get_column_names(csv_filepath: str) -> str:
 
 
 @tool
-def generate_descriptive_statistics(csv_filepath: str) -> ToolResponse:
+def generate_descriptive_statistics(csv_filepath: str) -> ChatResponse:
     """
     Generate a formatted table of descriptive statistics for a given DataFrame from csv path.
     This function calculates descriptive statistics that summarize the central
@@ -119,13 +119,13 @@ def generate_descriptive_statistics(csv_filepath: str) -> ToolResponse:
     """
     try:
         df = pd.read_csv(csv_filepath).describe(include="all")
-        return ToolDataFrameResponse(df)
+        return ChatDataFrameResponse(df)
     except Exception as err:
         return f"[ERROR]. Not possible to run 'generate_descriptive_statistics'. Error: {err}"
 
 
 @tool
-def python_evaluator(python_code: str, csv_filepath: str) -> str:
+def python_evaluator(python_code: str, csv_filepath: str) -> ChatResponse:
     """
     Use this tool when you need to perform complex calculations that cannot be derived
     from descriptive statistics. To use this tool, provide a Python code and the CSV
@@ -140,6 +140,6 @@ def python_evaluator(python_code: str, csv_filepath: str) -> str:
     try:
         python_repl = PythonREPL()
         response = python_repl.run(python_code)
-        return f"Code:\n```\n{python_code}\n```\n\nOutput:\n```\n{response}\n```"
+        return ChatPythonREPLResponse(code=python_code, response=response)
     except Exception as err:
         return f"[ERROR] Not possible to run 'python_evaluator'. Error: {err}"
