@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Installing aplication
 COPY ./.streamlit ./.streamlit
 COPY ./src ./src
+COPY ./logs ./logs
 COPY ./pyproject.toml ./
 RUN pip install . --no-deps
 

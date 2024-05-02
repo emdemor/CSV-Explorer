@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import json
 import traceback
 from typing import NamedTuple
@@ -23,10 +24,12 @@ from csv_explorer_ui.elements.flow import (
 )
 
 
-class InteractionStep(NamedTuple):
+@dataclass
+class InteractionStep:
     prompt: str
     response: ChatResponse
     rating: int | None = None
+    comment: str | None = None
 
 
 def front():
@@ -87,10 +90,7 @@ def front():
                 logger.error(msg)
 
             except Exception as err:
-                logger.error(traceback.print_exc())
-                st.error(
-                    "Houve um erro interno. Tente novamente.", icon=config.ICON_ERROR
-                )
+                msg = f"Houve um erro interno. {traceback.print_exc()}"
                 st.error(msg, icon=config.ICON_ALERT)
 
 
@@ -146,15 +146,23 @@ def _set_interaction_metadata(prompt: str, response: ChatResponse) -> None:
         response (ChatResponse): The response object for the current interaction step.
     """
     logger.info(f"Formatando os metadadaos da interação")
-    if f"{st.session_state.counter}_rating" not in st.session_state.interactions:
-        rating = None
+
+
+    indexes = [index for index, counter in st.session_state.rating_indexes.items() if counter == st.session_state.counter]
+
+    if len(indexes) > 0:
+        index = indexes[-1]
+        rating = st.session_state.ratings[index]
+        comment = st.session_state.comments[index]
     else:
-        rating = st.session_state.interactions[f"{st.session_state.counter}_rating"]
+        rating = None
+        comment = None
 
     metadata = InteractionStep(
         prompt=prompt,
         response=response,
         rating=rating,
+        comment=comment
     )
     st.session_state.interactions[st.session_state.counter] = metadata
 
@@ -169,3 +177,7 @@ def _persist_logs():
     extracted_messages = [x.__repr__() for x in st.session_state["explorer"].memory.chat_memory.messages]
     with open(config.MEMORY_LOGS_PATH, "w") as file:
         file.write(json.dumps(extracted_messages, indent=4, ensure_ascii=False))
+
+    with open(config.RATING_LOGS_PATH, "w") as file:
+        for index, int in st.session_state.interactions.items():
+            file.write( f"{index}: {int}\n" ) 

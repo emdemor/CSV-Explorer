@@ -173,6 +173,10 @@ div[data-testid="stSidebarContent"] button[data-testid="baseButton-header"] {
     color: #ffffff
 }
 
+div[data-baseweb="select"] {
+    cursor: pointer;
+}
+
 /* Header na sidebar */
 div[data-testid="stSidebarContent"] div[data-testid="stHeading"] h2 {
     font-family: 'Rajdhani', sans-serif;

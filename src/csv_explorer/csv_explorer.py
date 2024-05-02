@@ -102,7 +102,6 @@ class CSVExplorer:
             return_intermediate_steps=True,
             handle_parsing_errors=True,
         )
-        self._update_logs()
         return self
 
     def invoke(self, query: str, callbacks=None) -> ChatResponse:

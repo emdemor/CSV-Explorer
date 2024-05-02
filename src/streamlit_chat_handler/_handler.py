@@ -395,9 +395,11 @@ def _render_feedback(parent, last_index, default_value=None, default_comment="")
         if submitted:
             interaction_number = st.session_state.rating_indexes[last_index]
             st.session_state.ratings[last_index] = rating
+            st.session_state.comments[last_index] = comment
 
             if interaction_number in st.session_state.interactions:
-                st.session_state.interactions[interaction_number].rating = rating
+                setattr(st.session_state.interactions[interaction_number], "rating", rating)
+                setattr(st.session_state.interactions[interaction_number], "comment", comment)
 
             logger.info(f"Avaliação da interação {interaction_number} foi alterada para {rating}")
             logger.info(f"Comentário da interação {interaction_number} foi alterado para {comment}")

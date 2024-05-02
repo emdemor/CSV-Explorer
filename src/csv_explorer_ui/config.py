@@ -17,6 +17,8 @@ INSTRUCTIONS_PATH = str(resources.files("csv_explorer_ui.assets").joinpath("inst
 
 MEMORY_LOGS_PATH = "logs/memory.txt"
 
+RATING_LOGS_PATH = "logs/ratings.txt"
+
 ICON_ALERT = "🚨"
 ICON_HIGH_TEMPERATURE = "🌡️"
 ICON_ERROR = "❌"
