@@ -143,7 +143,7 @@ class CSVExplorer:
         """
         return ChatResponse(
             output=answer["output"],
-            elements=[x.to_element() for x in response],
+            elements=[x.to_element() for x in response if str(x.to_element().content).strip() != ''],
             intermediate_outputs=[x[1] for x in answer["intermediate_steps"]],
             intermediate_actions=[x[0] for x in answer["intermediate_steps"]],
         )
@@ -212,10 +212,10 @@ class CSVExplorer:
             list[ChatResponse]: A list of ChatResponse objects representing the parsed response.
         """
         self.memory.save_context(
-            {"input": query},
-            {"output": [answer["output"]]},
+            {"input": query.strip()},
+            {"output": [answer["output"].strip()]},
         )
-        return [ChatMarkdownResponse(answer["output"])]
+        return [ChatMarkdownResponse(answer["output"].strip())]
 
     def _parse_figures(self, query: str, answer: Dict[str, Any]) -> List[ChatResponse]:
         """
@@ -237,16 +237,16 @@ class CSVExplorer:
         action, response = answer["intermediate_steps"][-1]
 
         self.memory.save_context(
-            {"input": query},
+            {"input": query.strip()},
             {
                 "output": (
-                    f'{answer["output"]} | '
-                    f'Title: {str(action.tool_input["plot_description"])} | '
-                    f"Code: {str(response)}."
+                    f'{answer["output"].strip()} | '
+                    f'Title: {str(action.tool_input["plot_description"]).strip()} | '
+                    f"Code: {str(response).strip()}."
                 )
             },
         )
-        return [ChatMarkdownResponse(answer["output"]), response]
+        return [ChatMarkdownResponse(answer["output"].strip()), response]
 
     def _parse_markdown(self, query: str, answer: Dict[str, Any]) -> List[ChatResponse]:
         """
@@ -264,14 +264,14 @@ class CSVExplorer:
         """
 
         elements: list[ChatResponse] = [
-            x for x in parse_markdown_text(answer["output"])
+            x for x in parse_markdown_text(answer["output"].strip())
         ]
         memory_text: list[str] = [
-            e.df.to_markdown() if isinstance(e, ChatDataFrameResponse) else str(e)
+            e.df.to_markdown().strip() if isinstance(e, ChatDataFrameResponse) else str(e).strip()
             for e in elements
         ]
         self.memory.save_context(
-            {"input": query},
+            {"input": query.strip()},
             {"output": " ".join(memory_text)},
         )
 

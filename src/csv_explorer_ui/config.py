@@ -1,7 +1,7 @@
 import os
 from importlib import resources
 
-import csv_explorer
+import csv_explorer_ui
 
 TITLE = "CSV Explorer"
 
@@ -15,9 +15,16 @@ PLT_STYLE = str(resources.files("csv_explorer_ui.assets").joinpath("plots.mplsty
 
 INSTRUCTIONS_PATH = str(resources.files("csv_explorer_ui.assets").joinpath("instructions.md"))
 
-MEMORY_LOGS_PATH = "logs/memory.txt"
+if os.environ.get("ENV", "local") == "local":
+    LOGS_PATH = "logs"
+else:
+    LOGS_PATH = os.path.join(
+        os.sep.join(os.path.abspath(csv_explorer_ui.__file__).split(os.sep)[:-1]),
+        "logs",
+    )
 
-RATING_LOGS_PATH = "logs/ratings.txt"
+if not os.path.exists(LOGS_PATH):
+    os.makedirs(LOGS_PATH) 
 
 ICON_ALERT = "🚨"
 ICON_HIGH_TEMPERATURE = "🌡️"

@@ -319,3 +319,7 @@ div[data-testid="element-container"] > div.row-widget > div[data-testid="stFormS
     justify-content: center;
     margin-top: 20px;
 }
+
+div[data-testid="stSelectbox"] > div[data-baseweb="select"] > div {
+    cursor: pointer;
+}
